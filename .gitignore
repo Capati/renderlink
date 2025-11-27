@@ -14,18 +14,18 @@
 *.manifest
 node_modules
 
-/examples/build/shaders/*/*.wgsl
-/examples/build/shaders/*/*.spv
-/examples/build/shaders/*/*.metal
-/examples/build/shaders/*/*.msl
-/examples/build/shaders/*/*.frag
-/examples/build/shaders/*/*.vert
-/examples/build/shaders/*/*.dxil
-/examples/build/*.exe
-/examples/build/*.js
-/examples/build/*.map
-/examples/build/*.wasm
-/examples/build/.shader_hash
+/build/shaders/*/*.wgsl
+/build/shaders/*/*.spv
+/build/shaders/*/*.metal
+/build/shaders/*/*.msl
+/build/shaders/*/*.frag
+/build/shaders/*/*.vert
+/build/shaders/*/*.dxil
+/build/*.exe
+/build/*.js
+/build/*.map
+/build/*.wasm
+/build/.shader_hash
 
 # Keep obj models in this folder
 !/utils/tobj/**/*.obj
