@@ -20,11 +20,10 @@ VIDEO_MODE_DEFAULT :: rl.Video_Mode {
 
 WABBIT_DATA :: #load("wabbit_alpha.png")
 
-MAX_BUNNIES : uint = 50000
-GRAVITY : f32 = -1.0 // Adjusted for world space scale
-MAX_VELOCITY : f32 = 32.0 // Adjusted for world space scale
-BUNNIES_PER_CLICK :: 100
-BUNNY_SCALE :: 0.1 // Scale bunnies to be visible in world space
+MAX_BUNNIES :: 50000
+GRAVITY : f32 = -1.0
+MAX_VELOCITY : f32 = 32.0
+BUNNIES_PER_TIME :: 100
 
 Bunny :: struct {
     pos: rl.Vec2f,
@@ -32,21 +31,25 @@ Bunny :: struct {
     color: rl.Color,
 }
 
-// Application struct holds the engine context and frame persistent data
 Application :: struct {
+    // Engine context
     #subtype ctx: rl.Context,
+
+    // Frame data
+    camera_zoom: f32,
     bunny_texture: rl.Texture,
     bunnies: [dynamic]Bunny,
 }
 
 init :: proc(self: ^Application) -> (ok: bool) {
-    texture_info := rl.DEFAULT_TEXTURE_INFO
-    texture_info.filter_mode = .Nearest
-    self.bunny_texture = rl.load_texture_from_memory(self, WABBIT_DATA, texture_info)
+    self.bunny_texture = rl.load_texture_from_memory(self, WABBIT_DATA)
     self.bunnies = make([dynamic]Bunny, 0, MAX_BUNNIES)
 
     // Start with some bunnies
-    spawn_bunnies(self, BUNNIES_PER_CLICK)
+    spawn_bunnies(self, BUNNIES_PER_TIME)
+
+    self.camera_zoom = 20.0
+    rl.camera_set_zoom(self, self.camera_zoom)
 
     return true // init ok
 }
@@ -73,12 +76,8 @@ spawn_bunnies :: proc(self: ^Application, count: int) {
 }
 
 update_bunnies :: proc(self: ^Application, dt: f32) {
-    bunny_width : f32 = 1.0
-    bunny_height : f32 = 1.0
-
-    // Calculate world space bounds based on camera zoom (Unity-like)
-    // zoom = world units visible vertically
-    half_height : f32 = 30.0 / 2.0
+    // Calculate world space bounds based on camera zoom
+    half_height : f32 = self.camera_zoom / 2.0
     aspect_ratio := f32(CLIENT_WIDTH) / f32(CLIENT_HEIGHT)
     half_width := half_height * aspect_ratio
 
@@ -100,15 +99,14 @@ update_bunnies :: proc(self: ^Application, dt: f32) {
         if bunny.pos.x <= -half_width {
             bunny.pos.x = -half_width
             bunny.vel.x = -bunny.vel.x
-        } else if bunny.pos.x >= half_width - bunny_width {
-            bunny.pos.x = half_width - bunny_width
+        } else if bunny.pos.x >= half_width {
+            bunny.pos.x = half_width
             bunny.vel.x = -bunny.vel.x
         }
 
         // Bounce off floor and ceiling (top and bottom from center)
-        // Bottom bound (bunny.pos.y - bunny_height is the bottom edge)
-        if bunny.pos.y - bunny_height <= -half_height {
-            bunny.pos.y = -half_height + bunny_height
+        if bunny.pos.y <= -half_height {
+            bunny.pos.y = -half_height
             bunny.vel.y = -bunny.vel.y * 0.85 // Some energy loss on bounce
         } else if bunny.pos.y >= half_height {
             bunny.pos.y = half_height
@@ -122,7 +120,7 @@ draw :: proc(self: ^Application, dt: f32) -> (ok: bool) {
     update_bunnies(self, dt)
 
     if rl.key_is_down(self, .Space) {
-        spawn_bunnies(self, BUNNIES_PER_CLICK)
+        spawn_bunnies(self, BUNNIES_PER_TIME)
         log.infof("Total bunnies: %d", len(self.bunnies))
     }
 
@@ -131,7 +129,6 @@ draw :: proc(self: ^Application, dt: f32) -> (ok: bool) {
 
     // Draw all bunnies
     for bunny in self.bunnies {
-        // log.info(bunny.pos)
         rl.draw_sprite(
             self,
             self.bunny_texture,
@@ -149,7 +146,7 @@ event :: proc(self: ^Application, event: rl.Event) -> (ok: bool) {
     case rl.Key_Pressed_Event:
         #partial switch e.key {
         case .Space:
-            // spawn_bunnies(self, BUNNIES_PER_CLICK)
+            // spawn_bunnies(self, BUNNIES_PER_TIME)
         }
     }
     return true // we keep running after this event
