@@ -8,9 +8,9 @@ import "core:mem"
 import mu "vendor:microui"
 
 // Local packages
-import "../../gpu"
-import app "../../application"
-import wgpu_mu "../../utils/microui"
+import "../../../gpu"
+import app "../../../application"
+import wgpu_mu "../../../utils/microui"
 
 CLIENT_WIDTH  :: 800
 CLIENT_HEIGHT :: 600
@@ -54,7 +54,7 @@ init :: proc(self: ^Application) -> (ok: bool) {
 step :: proc(self: ^Application, dt: f32) -> (ok: bool) {
     mu_update(self)
 
-    frame := app.get_current_frame()
+    frame := app.get_current_frame(self)
     if frame.skip { return }
     defer app.release_current_frame(&frame)
 
@@ -152,12 +152,15 @@ main :: proc() {
         }
     }
 
+    ctx := new(Application)
+    defer free(ctx)
+
     callbacks := app.Application_Callbacks {
         init  = app.App_Init_Callback(init),
-        step  = app.App_Step_Callback(step),
+        draw  = app.App_Draw_Callback(step),
         event = app.App_Event_Callback(event),
         quit  = app.App_Quit_Callback(quit),
     }
 
-    app.init(Application, VIDEO_MODE_DEFAULT, EXAMPLE_TITLE, callbacks)
+    app.init(ctx, VIDEO_MODE_DEFAULT, EXAMPLE_TITLE, callbacks)
 }

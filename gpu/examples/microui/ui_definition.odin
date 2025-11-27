@@ -7,7 +7,7 @@ import "core:fmt"
 import mu "vendor:microui"
 
 // Local packages
-import app "../../application"
+import app "../../../application"
 
 SLIDER_FMT :: "%.0f"
 
