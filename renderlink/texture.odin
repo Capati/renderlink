@@ -39,7 +39,7 @@ Texture_Info :: struct {
 DEFAULT_TEXTURE_INFO :: Texture_Info {
     label           = "",
     mip_level_count = 1,
-    filter_mode     = .Linear,
+    filter_mode     = .Nearest,
     address_mode    = .Clamp_To_Edge,
 }
 
