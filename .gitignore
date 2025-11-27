@@ -12,6 +12,8 @@
 *.ilk
 *.res
 *.manifest
+*.map
+*.wasm
 node_modules
 
 /build/shaders/*/*.wgsl
@@ -23,8 +25,6 @@ node_modules
 /build/shaders/*/*.dxil
 /build/*.exe
 /build/*.js
-/build/*.map
-/build/*.wasm
 /build/.shader_hash
 
 # Keep obj models in this folder
