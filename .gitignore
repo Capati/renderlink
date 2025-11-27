@@ -1,0 +1,53 @@
+# Build
+*.lib
+*.dll
+*.pdb
+*.a
+*.dylib
+*.exe
+*.so
+*.obj
+*.o
+*.exp
+*.ilk
+*.res
+*.manifest
+node_modules
+
+/examples/build/shaders/*/*.wgsl
+/examples/build/shaders/*/*.spv
+/examples/build/shaders/*/*.metal
+/examples/build/shaders/*/*.msl
+/examples/build/shaders/*/*.frag
+/examples/build/shaders/*/*.vert
+/examples/build/shaders/*/*.dxil
+/examples/build/*.exe
+/examples/build/*.js
+/examples/build/*.map
+/examples/build/*.wasm
+/examples/build/.shader_hash
+
+# Keep obj models in this folder
+!/utils/tobj/**/*.obj
+
+# IDE/Editor
+/.vscode
+!/.vscode/launch.json
+!/.vscode/tasks.json
+*.sublime-workspace
+*.code-workspace
+.idea/
+*.swp
+*.swo
+
+# Logs and temp
+/tmp
+*.log
+
+# OS
+**/.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project specific
+ols.json
