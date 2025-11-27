@@ -57,3 +57,5 @@ string_buffer_clone_string :: shared.string_buffer_clone_string
 string_view_get_string :: shared.string_view_get_string
 string_view_get_cstring :: shared.string_view_get_cstring
 string_view_clone_string :: shared.string_view_clone_string
+
+to_bytes :: shared.to_bytes
