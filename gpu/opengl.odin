@@ -33,11 +33,19 @@ gl_init :: proc(allocator := context.allocator) {
         surface_release          = gl_win32_surface_release
     } else  when ODIN_OS == .Linux  {
         // Global procedures
-        gpu.create_instance         = gl_linux_create_instance
+        _create_instance         = gl_linux_create_instance
+
+        // Adapter procedures
+        adapter_release          = gl_linux_adapter_release
 
         // Instance procedures
-        gpu.instance_create_surface = gl_linux_instance_create_surface
-        gpu.instance_release        = gl_linux_instance_release
+        instance_create_surface  = gl_linux_instance_create_surface
+        instance_request_adapter = gl_linux_instance_request_adapter
+        instance_release         = gl_linux_instance_release
+
+        // Surface procedures
+        surface_get_capabilities = gl_linux_surface_get_capabilities
+        surface_release          = gl_linux_surface_release
     } else {
         unreachable()
     }
@@ -2553,9 +2561,7 @@ gl_surface_configure :: proc(
 ) {
     assert(config.width != 0, loc = loc)
     assert(config.height != 0, loc = loc)
-
     impl := _gl_surface_get_impl(surface, loc)
-    // device_impl := _gl_device_get_impl(device, loc)
 
     impl.back_buffer_count = config.present_mode == .Mailbox ? 3 : 2
     impl.config = config
@@ -2567,11 +2573,9 @@ gl_surface_configure :: proc(
     } else {
         // Otherwise, create initial resources
         for _ in 0 ..< impl.back_buffer_count {
-            // Create texture
             texture_impl := _gl_texture_new_impl(device, impl.allocator, loc)
             sa.push_back(&impl.textures, texture_impl)
 
-            // Create texture view
             view_impl := _gl_texture_view_new_impl(Texture(texture_impl), impl.allocator, loc)
             sa.push_back(&impl.views, view_impl)
         }
@@ -2600,7 +2604,7 @@ gl_surface_configure :: proc(
         internal_format := GL_FORMAT_TABLE[texture_impl.format].internal_format
         gl.TextureStorage2D(
             texture        = texture_impl.handle,
-            levels         = 1, // mip levels
+            levels         = 1,
             internalformat = internal_format,
             width          = i32(config.width),
             height         = i32(config.height),
@@ -2618,7 +2622,6 @@ gl_surface_configure :: proc(
         }
 
         view_impl := sa.get(impl.views, i)
-
         view_impl.handle            = texture_impl.handle
         view_impl.format            = view_descriptor.format
         view_impl.dimension         = view_descriptor.dimension
@@ -2638,8 +2641,12 @@ gl_surface_configure :: proc(
             fbo,
             gl.COLOR_ATTACHMENT0,
             texture_impl.handle,
-            0, // mip level
+            0,
         )
+
+        // Set up draw/read buffers for the framebuffer
+        gl.NamedFramebufferDrawBuffer(fbo, gl.COLOR_ATTACHMENT0)
+        gl.NamedFramebufferReadBuffer(fbo, gl.COLOR_ATTACHMENT0)
 
         // Check framebuffer completeness
         status := gl.CheckNamedFramebufferStatus(fbo, gl.FRAMEBUFFER)
