@@ -17,7 +17,7 @@ _window_get_gpu_surface :: proc(
 ) #optional_ok {
     impl := _window_get_impl(window, loc)
 
-    descriptpr: gpu.Surface_Descriptor
+    descriptor: gpu.Surface_Descriptor
     switch glfw.GetPlatform() {
     case glfw.PLATFORM_WAYLAND:
         descriptor.label = "Wayland Surface"
