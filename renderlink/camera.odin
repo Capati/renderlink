@@ -18,8 +18,8 @@ Camera :: struct {
     matrix_proc:     Camera_Matrix_Proc,
 }
 
-camera_create :: proc(center := Vec2f{0, 0}, zoom: f32 = 30.0) -> Camera {
-    return {center = center, zoom = zoom}
+camera_create :: proc(center := Vec2f{0, 0}, zoom: f32 = 30.0, aspect_ratio: f32 = 1.0) -> Camera {
+    return {center = center, zoom = zoom, aspect_ratio = aspect_ratio}
 }
 
 camera_build_view_projection_matrix :: proc(self: ^Camera) -> la.Matrix4f32 {
