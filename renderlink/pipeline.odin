@@ -179,7 +179,7 @@ create_graphics_pipeline :: proc(
         layout        = ctx.texture_layout.pipeline,
         vertex        = vertex_state,
         primitive     = primitive_state,
-        // depth_stencil = has_depth_stencil ? &depth_stencil_state : nil,
+        depth_stencil = has_depth_stencil ? &depth_stencil_state : nil,
         multisample   = multisample_state,
         fragment      = &fragment_state,
     }
