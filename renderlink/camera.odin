@@ -46,19 +46,46 @@ camera_build_view_projection_matrix :: proc(self: ^Camera) -> la.Matrix4f32 {
     return ortho_camera
 }
 
-camera_set_zoom :: proc(ctx: ^Context, zoom: f32) {
-    ctx.camera.zoom = zoom
+camera_set_zoom :: proc(self: ^Camera, zoom: f32) {
+    self.zoom = zoom
 }
 
-camera_set_aspect_size :: proc(camera: ^Camera, size: Vec2u) {
-    camera.aspect_ratio = f32(size.x) / f32(size.y)
+camera_set_aspect_size :: proc(self: ^Camera, size: Vec2u) {
+    self.aspect_ratio = f32(size.x) / f32(size.y)
 }
 
-camera_set_aspect_value :: proc(camera: ^Camera, aspect: f32) {
-    camera.aspect_ratio = aspect
+camera_set_aspect_value :: proc(self: ^Camera, aspect: f32) {
+    self.aspect_ratio = aspect
 }
 
 camera_set_aspect :: proc {
     camera_set_aspect_size,
     camera_set_aspect_value,
+}
+
+camera_get_zoom :: proc(self: ^Camera) -> f32 {
+    return self.zoom
+}
+
+camera_get_aspect :: proc(self: ^Camera) -> f32 {
+    return self.aspect_ratio
+}
+
+// Get the visible bounds by the camera.
+camera_get_bounds :: proc(self: ^Camera) -> (min: Vec2f, max: Vec2f) {
+    hx := self.zoom / 2.0
+    hy := self.zoom / 2.0 / self.aspect_ratio
+    min = self.center - {hx, hy}
+    max = self.center + {hx, hy}
+    return
+}
+
+// Get the total world width visible by the camera.
+camera_get_world_width :: proc(self: ^Camera) -> f32 {
+    return self.zoom
+}
+
+// Get the total world height visible by the camera.
+camera_get_world_height :: proc(self: ^Camera) -> f32 {
+    return self.zoom / self.aspect_ratio
 }
