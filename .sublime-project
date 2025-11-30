@@ -65,10 +65,22 @@
 
                 // renderlink examples
                 {
+                    "name": "Bunnymark",
+                    "windows": { "cmd": ["cmd", "/c", "build.bat", "renderlink\\examples\\bunnymark", "run"] },
+                    "linux": { "cmd": ["./build.sh", "renderlink/examples/bunnymark", "run"] },
+                    "osx": { "cmd": ["./build.sh", "renderlink/examples/bunnymark", "run"] },
+                },
+                {
                     "name": "Shapes",
                     "windows": { "cmd": ["cmd", "/c", "build.bat", "renderlink\\examples\\shapes", "run"] },
                     "linux": { "cmd": ["./build.sh", "renderlink/examples/shapes", "run"] },
                     "osx": { "cmd": ["./build.sh", "renderlink/examples/shapes", "run"] },
+                },
+                {
+                    "name": "Snake",
+                    "windows": { "cmd": ["cmd", "/c", "build.bat", "renderlink\\examples\\snake", "run"] },
+                    "linux": { "cmd": ["./build.sh", "renderlink/examples/snake", "run"] },
+                    "osx": { "cmd": ["./build.sh", "renderlink/examples/snake", "run"] },
                 },
                 {
                     "name": "Sprite",
@@ -76,12 +88,7 @@
                     "linux": { "cmd": ["./build.sh", "renderlink/examples/sprite", "run"] },
                     "osx": { "cmd": ["./build.sh", "renderlink/examples/sprite", "run"] },
                 },
-                {
-                    "name": "Bunnymark",
-                    "windows": { "cmd": ["cmd", "/c", "build.bat", "renderlink\\examples\\bunnymark", "run"] },
-                    "linux": { "cmd": ["./build.sh", "renderlink/examples/bunnymark", "run"] },
-                    "osx": { "cmd": ["./build.sh", "renderlink/examples/bunnymark", "run"] },
-                },
+
             ],
         },
     ],
