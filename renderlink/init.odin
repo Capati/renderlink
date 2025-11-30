@@ -160,7 +160,7 @@ app_init_callback :: proc(ctx: ^Context) -> (ok: bool) {
                 },
             },
             {
-                binding = 2,
+                binding = 1,
                 visibility = {.Fragment},
                 type = gpu.Sampler_Binding_Layout {
                     type = .Filtering,
@@ -282,7 +282,7 @@ app_draw_callback :: proc(ctx: ^Context, dt: f32) -> bool {
                     resource = texture_impl.view,
                 },
                 {
-                    binding = 2,
+                    binding = 1,
                     resource = texture_impl.sampler,
                 },
             },
