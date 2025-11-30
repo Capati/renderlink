@@ -1,7 +1,7 @@
 package renderlink
 
 // Core
-import "base:runtime"
+// import "base:runtime"
 import "core:mem"
 import "core:log"
 import la "core:math/linalg"
@@ -13,44 +13,43 @@ import "../gpu"
 
 Context :: struct {
     // Base application subtype
-    #subtype base:   Application,
+    using base:       Application,
 
     // Initialization
-    callbacks:       Application_Callbacks,
-    allocator:       runtime.Allocator,
+    user_callbacks:   Application_Callbacks,
 
     // Pool of handles
-    textures:        Pool(Texture_Impl),
-    shaders:         Pool(Shader_Impl),
+    textures:         Pool(Texture_Impl),
+    shaders:          Pool(Shader_Impl),
 
     // Resources
-    default_texture: Texture,
-    sprite_shader:   Shader,
-    vertex_buffer:   Sized_Buffer,
-    index_buffer:    Sized_Buffer,
+    default_texture:  Texture,
+    sprite_shader:    Shader,
+    vertex_buffer:    Sized_Buffer,
+    index_buffer:     Sized_Buffer,
     texture_layout: struct {
         layout:   gpu.Bind_Group_Layout,
         pipeline: gpu.Pipeline_Layout,
     },
-    pipelines:       Pipeline_Map,
+    pipelines:        Pipeline_Map,
 
     // State
-    y_sort_state:    Y_Sort_State,
-    camera_uniform:  gpu.Buffer,
-    camera:          Camera,
-    clear_color:     gpu.Color,
+    y_sort_state:     Y_Sort_State,
+    camera_uniform:   gpu.Buffer,
+    camera:           Camera,
+    clear_color:      gpu.Color,
     rpass: struct {
         colors:     [1]gpu.Render_Pass_Color_Attachment,
         descriptor: gpu.Render_Pass_Descriptor,
     },
 
     // Batching
-    render_queues:   Render_Queues,
+    render_queues:    Render_Queues,
     staging_vertices: [dynamic]Sprite_Vertex,
     staging_indices:  [dynamic]u32,
 
     // Internal
-    arena:           mem.Dynamic_Arena, // frame allocator
+    arena:            mem.Dynamic_Arena, // frame allocator
 }
 
 // Opens a window and initializes the application context.
@@ -75,7 +74,7 @@ init :: proc(
     ensure(ctx != nil, "Failed to allocate the application context", loc)
 
     ctx.allocator = allocator
-    ctx.callbacks = callbacks // store user callbacks
+    ctx.user_callbacks = callbacks // store user callbacks
 
     // Window creation and callback management are handled by the application.
     // Here we register the engine callbacks, which will later invoke the
@@ -198,7 +197,7 @@ app_init_callback :: proc(ctx: ^Context) -> (ok: bool) {
     mem.dynamic_arena_init(&ctx.arena)
 
     // Call user initialization
-    if ctx.callbacks.init != nil && !ctx.callbacks.init(ctx) {
+    if ctx.user_callbacks.init != nil && !ctx.user_callbacks.init(ctx) {
         log.errorf("Failed to initialize '%s'. Ensure init() returns true.",
            app.window_get_title(ctx.base.window))
         return
@@ -215,8 +214,8 @@ app_draw_callback :: proc(ctx: ^Context, dt: f32) -> bool {
 
     // User drawing
 
-    if ctx.callbacks.draw != nil {
-        if !ctx.callbacks.draw(ctx, dt) {
+    if ctx.user_callbacks.draw != nil {
+        if !ctx.user_callbacks.draw(ctx, dt) {
             return false
         }
     }
@@ -361,8 +360,8 @@ app_draw_callback :: proc(ctx: ^Context, dt: f32) -> bool {
 }
 
 app_event_callback :: proc(ctx: ^Context, event: Event) -> (ok: bool) {
-    if ctx.callbacks.event != nil {
-        if !ctx.callbacks.event(ctx, event) {
+    if ctx.user_callbacks.event != nil {
+        if !ctx.user_callbacks.event(ctx, event) {
             return
         }
     }
@@ -378,8 +377,8 @@ app_event_callback :: proc(ctx: ^Context, event: Event) -> (ok: bool) {
 
 app_quit_callback :: proc(ctx: ^Context) {
     context.allocator = ctx.allocator
-    if ctx.callbacks.quit != nil {
-        ctx.callbacks.quit(ctx)
+    if ctx.user_callbacks.quit != nil {
+        ctx.user_callbacks.quit(ctx)
     }
     destroy(ctx)
 }
