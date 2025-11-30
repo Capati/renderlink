@@ -4,22 +4,14 @@ package shared
 import "core:mem"
 import "core:strings"
 
-// Represents a view into a string with explicit length.
-String_View :: struct {
-    data:   cstring,
-    length: uint,
-}
-
 STRLEN :: max(uint)
 
 GPU_STRING_BUFFER_SIZE :: #config(GPU_STRING_BUFFER_SIZE, 256)
 
 // Fixed-size buffer for building strings.
 String_Buffer :: struct($N: int) {
-    data:     [N]u8,
-    length:   uint,
-    max_size: uint,
-    str:      String_View,
+    data:   [N]u8,
+    length: uint,
 }
 
 String_Buffer_Base :: String_Buffer(GPU_STRING_BUFFER_SIZE)
@@ -28,27 +20,27 @@ String_Buffer_Small :: String_Buffer(128)
 string_buffer_init :: proc "contextless" (
     buffer: ^$T/String_Buffer,
     str: string,
-) -> String_View {
+) -> string {
     string_buffer_clear(buffer)
     string_buffer_append(buffer, str)
-    buffer.max_size = len(buffer.data)
-    return string_buffer_get(buffer)
+    return string_buffer_get_string(buffer)
 }
 
 string_buffer_append :: proc "contextless" (self: ^$T/String_Buffer, str: string) {
+    max_size := uint(len(self.data))
+
     // Check if we have enough space (leaving room for null terminator)
-    if self.length + len(str) >= self.max_size - 1 {
+    if self.length + len(str) >= max_size - 1 {
         // Truncate if necessary
-        remaining := self.max_size - self.length - 1
+        remaining := max_size - self.length - 1
         copy(self.data[self.length:], (transmute([]u8)str)[:remaining])
         self.length += remaining
     } else {
         // Copy entire string
         copy(self.data[self.length:], (transmute([]u8)str)[:])
-        self.length += len(str)
+        self.length += uint(len(str))
     }
     self.data[self.length] = 0 // Ensure null termination
-    string_buffer_update(self)
 }
 
 string_buffer_append_int :: proc "contextless" (
@@ -132,43 +124,31 @@ string_buffer_append_f64 :: proc "contextless" (
     }
 }
 
-string_buffer_update :: proc "contextless" (self: ^$T/String_Buffer) {
-    if (self.length == 0) {
-        self.str = {}
-    } else {
-        self.str.data = cstring(raw_data(self.data[:self.length]))
-        self.str.length = self.length
-    }
-}
-
 string_buffer_clear :: proc "contextless" (self: ^$T/String_Buffer) {
     mem.zero_slice(self.data[:])
     self.length = 0
-    self.str = {}
 }
 
 string_buffer_capacity :: proc "contextless" (self: ^$T/String_Buffer) -> uint {
-    return self.max_size - self.length - 1 // -1 for null terminator
+    max_size := uint(len(self.data))
+    return max_size - self.length - 1 // -1 for null terminator
 }
 
 string_buffer_is_full :: proc "contextless" (self: ^$T/String_Buffer) -> bool {
-    return self.length >= self.max_size - 1
+    max_size := uint(len(self.data))
+    return self.length >= max_size - 1
 }
 
 string_buffer_is_empty :: proc "contextless" (self: ^$T/String_Buffer) -> bool {
     return self.length == 0
 }
 
-string_buffer_get :: proc "contextless" (self: ^$T/String_Buffer) -> String_View {
-    return self.str
-}
-
 string_buffer_get_string :: proc "contextless" (self: ^$T/String_Buffer) -> string {
-    return string_view_get_string(self.str)
+    return self.length > 0 ? string(self.data[:self.length]) : ""
 }
 
 string_buffer_get_cstring :: proc "contextless" (self: ^$T/String_Buffer) -> cstring {
-    return self.str.data
+    return cstring(raw_data(self.data[:]))
 }
 
 string_buffer_clone_string :: proc(
@@ -178,23 +158,5 @@ string_buffer_clone_string :: proc(
     res: string,
     err: mem.Allocator_Error,
 ) #optional_allocator_error {
-    return string_view_clone_string(self.str, allocator)
-}
-
-string_view_get_string :: proc "contextless" (self: String_View) -> string {
-    return self.length > 0 ? string(self.data)[:self.length] : ""
-}
-
-string_view_get_cstring :: proc "contextless" (self: String_View) -> cstring {
-    return self.data
-}
-
-string_view_clone_string :: proc(
-    self: String_View,
-    allocator := context.allocator,
-) -> (
-    res: string,
-    err: mem.Allocator_Error,
-) #optional_allocator_error {
-    return strings.clone(string_view_get_string(self), allocator)
+    return strings.clone(string_buffer_get_string(self), allocator)
 }
