@@ -2,6 +2,8 @@ package renderlink
 
 // Core
 import "core:math"
+import la "core:math/linalg"
+import sa "core:container/small_array"
 
 Recti :: struct {
     offset: Vec2i,
@@ -149,5 +151,43 @@ simple_rect :: proc(
         Sprite_Vertex{{p[2].x, p[2].y, position.z}, {tile_count.x, 0.0}, color_array},
         // Bottom-left
         Sprite_Vertex{{p[3].x, p[3].y, position.z}, {0.0, 0.0}, color_array},
+    }
+}
+
+create_line_strip :: proc(
+    points: []Vec2f,
+    thickness: f32,
+    vertices: ^sa.Small_Array(6 * 4, Vec2f),
+    indices: ^sa.Small_Array(6 * 6, u32),
+    loc := #caller_location,
+) {
+    assert(len(points) >= 2, "Not enough points to create a line strip!", loc)
+
+    half_thickness := thickness / 4.0
+
+    for i in 0..<(len(points) - 1) {
+        p0 := points[i]
+        p1 := points[i + 1]
+
+        direction := la.normalize0(p1 - p0)
+        if direction == {0, 0} {
+            direction = {1, 0}
+        }
+        normal := Vec2f{-direction.y, direction.x}
+
+        index_base := u32(vertices.len)
+
+        sa.push_back(vertices, p0 - normal * half_thickness)
+        sa.push_back(vertices, p0 + normal * half_thickness)
+        sa.push_back(vertices, p1 - normal * half_thickness)
+        sa.push_back(vertices, p1 + normal * half_thickness)
+
+        sa.push_back(indices, index_base)
+        sa.push_back(indices, index_base + 1)
+        sa.push_back(indices, index_base + 2)
+
+        sa.push_back(indices, index_base + 2)
+        sa.push_back(indices, index_base + 1)
+        sa.push_back(indices, index_base + 3)
     }
 }

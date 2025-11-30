@@ -2,6 +2,7 @@ package renderlink
 
 // Core
 import sa "core:container/small_array"
+import la "core:math/linalg"
 
 Sprite_Vertex :: struct {
     position:   Vec3f,
@@ -68,6 +69,105 @@ clear_background :: clear_color
 
 draw_rect :: proc(ctx: ^Context, center, size: Vec2f, color: Color, z_index := 0) {
     draw_quad(ctx, center, size, color, ctx.default_texture, z_index)
+}
+
+Z_DIV: f32 : 1000.0
+
+draw_rect_outline :: proc(
+    ctx: ^Context,
+    center, size: Vec2f,
+    thickness: f32,
+    color: Color,
+    z_index := 0,
+    loc := #caller_location,
+) {
+    w := size.x
+    h := size.y
+
+    hw := w / 2.0
+    hh := h / 2.0
+
+    // Draw as 4 filled rectangles (top, bottom, left, right)
+    // Top
+    draw_rect(ctx, {center.x, center.y - hh + thickness / 2}, {w, thickness}, color, z_index)
+    // Bottom
+    draw_rect(ctx, {center.x, center.y + hh - thickness / 2}, {w, thickness}, color, z_index)
+    // Left
+    draw_rect(
+        ctx,
+        {center.x - hw + thickness / 2, center.y},
+        {thickness, h - thickness * 2},
+        color,
+        z_index,
+    )
+    // Right
+    draw_rect(
+        ctx,
+        {center.x + hw - thickness / 2, center.y},
+        {thickness, h - thickness * 2},
+        color,
+        z_index,
+    )
+}
+
+create_line_segment :: proc(
+    p0, p1: Vec2f,
+    thickness: f32,
+    z: f32,
+    color: Vec4f,
+) -> (
+    vertices: sa.Small_Array(4, Sprite_Vertex),
+    indices: sa.Small_Array(6, u32),
+) {
+    half_thickness := thickness / 4.0
+
+    direction := la.normalize0(p1 - p0)
+    if direction == {0, 0} {
+        direction = {1, 0}
+    }
+    normal := Vec2f{-direction.y, direction.x}
+
+    sa.push_back(
+        &vertices,
+        Sprite_Vertex {
+            position = {(p0 - normal * half_thickness).x, (p0 - normal * half_thickness).y, z},
+            tex_coords = {0, 0},
+            color = color,
+        },
+    )
+    sa.push_back(
+        &vertices,
+        Sprite_Vertex {
+            position = {(p0 + normal * half_thickness).x, (p0 + normal * half_thickness).y, z},
+            tex_coords = {0, 0},
+            color = color,
+        },
+    )
+    sa.push_back(
+        &vertices,
+        Sprite_Vertex {
+            position = {(p1 - normal * half_thickness).x, (p1 - normal * half_thickness).y, z},
+            tex_coords = {0, 0},
+            color = color,
+        },
+    )
+    sa.push_back(
+        &vertices,
+        Sprite_Vertex {
+            position = {(p1 + normal * half_thickness).x, (p1 + normal * half_thickness).y, z},
+            tex_coords = {0, 0},
+            color = color,
+        },
+    )
+
+    sa.push_back(&indices, 0)
+    sa.push_back(&indices, 1)
+    sa.push_back(&indices, 2)
+    sa.push_back(&indices, 2)
+    sa.push_back(&indices, 1)
+    sa.push_back(&indices, 3)
+
+    return
 }
 
 draw_quad :: proc(
