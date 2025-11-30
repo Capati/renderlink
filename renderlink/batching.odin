@@ -3,6 +3,7 @@ package renderlink
 // Core
 import "core:mem"
 import "core:slice"
+import sa "core:container/small_array"
 // import "core:sync"
 
 Render_Queue_List :: struct {
@@ -114,8 +115,8 @@ prepare_batches :: proc(
         index_count: int
 
         for &mesh in meshes {
-            vertex_count += len(mesh.vertices)
-            index_count += len(mesh.indices)
+            vertex_count += sa.len(mesh.vertices)
+            index_count += sa.len(mesh.indices)
         }
 
         if vertex_count == 0 || index_count == 0 do continue
@@ -159,18 +160,25 @@ prepare_batches :: proc(
         // Append all vertices at once and append indices in batches
         current_vertex_base := u32(0)
         for &mesh in meshes {
-            append(&ctx.staging_vertices, ..mesh.vertices[:])
-
-            if len(mesh.indices) == 0 do continue
-
-            index_start := len(ctx.staging_indices)
-            resize(&ctx.staging_indices, len(ctx.staging_indices) + len(mesh.indices))
-
-            for i in 0..< len(mesh.indices) {
-                ctx.staging_indices[index_start + i] = mesh.indices[i] + current_vertex_base
+            // Copy vertices from Small_Array
+            for i in 0..<sa.len(mesh.vertices) {
+                append(&ctx.staging_vertices, sa.get(mesh.vertices, i))
             }
 
-            current_vertex_base += u32(len(mesh.vertices))
+            vertex_count := sa.len(mesh.vertices)
+            index_count := sa.len(mesh.indices)
+
+            if index_count == 0 do continue
+
+            index_start := len(ctx.staging_indices)
+            resize(&ctx.staging_indices, len(ctx.staging_indices) + index_count)
+
+            // Copy indices from Small_Array and adjust by vertex base
+            for i in 0..<index_count {
+                ctx.staging_indices[index_start + i] = sa.get(mesh.indices, i) + current_vertex_base
+            }
+
+            current_vertex_base += u32(vertex_count)
         }
     }
 

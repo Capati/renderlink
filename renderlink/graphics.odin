@@ -1,5 +1,8 @@
 package renderlink
 
+// Core
+import sa "core:container/small_array"
+
 Sprite_Vertex :: struct {
     position:   Vec3f,
     tex_coords: Vec2f,
@@ -8,8 +11,8 @@ Sprite_Vertex :: struct {
 
 Mesh :: struct {
     origin:        Vec3f,
-    vertices:      [4]Sprite_Vertex,
-    indices:       [6]u32,
+    vertices:      sa.Small_Array(4, Sprite_Vertex),
+    indices:       sa.Small_Array(6, u32),
     z_index:       int,
     texture:       Texture,
     y_sort_offset: f32,
@@ -93,18 +96,31 @@ draw_sprite :: proc(
     rotation: f32 = 0.0,
     #any_int z_index: int = 0,
 ) {
-    vertices: [4]Sprite_Vertex
+    vertices: sa.Small_Array(4, Sprite_Vertex)
 
     if rotation != 0.0 {
         // TODO
     } else {
-        vertices = simple_rect({position.x, position.y, f32(z_index)}, color, size, tile_count)
+        rect_vertices := simple_rect(
+            {position.x, position.y, f32(z_index)},
+            color,
+            size,
+            tile_count,
+        )
+        for v in rect_vertices {
+            sa.push_back(&vertices, v)
+        }
+    }
+
+    indices: sa.Small_Array(6, u32)
+    for idx in QUAD_INDICES {
+        sa.push_back(&indices, idx)
     }
 
     mesh := Mesh {
         origin        = {position.x, position.y, f32(z_index)},
         vertices      = vertices,
-        indices       = QUAD_INDICES,
+        indices       = indices,
         z_index       = z_index,
         texture       = texture,
         y_sort_offset = 0.0,
@@ -134,18 +150,29 @@ draw_sprite_ex :: proc(
 
     dimensions := texture_dimensions(ctx, texture)
 
-    vertices := rotated_rectangle(
-        position      = {position.x, position.y, f32(z_index)},
-        params        = raw,
-        tex_width     = f32(dimensions.width),
-        tex_height    = f32(dimensions.height),
-        color         = tint,
+    rect_vertices := rotated_rectangle(
+        position = {position.x, position.y, f32(z_index)},
+        params = raw,
+        tex_width = f32(dimensions.width),
+        tex_height = f32(dimensions.height),
+        color = tint,
         scroll_offset = params.scroll_offset,
     )
 
+    vertices: sa.Small_Array(4, Sprite_Vertex)
+    for v in rect_vertices {
+        sa.push_back(&vertices, v)
+    }
+
+    indices: sa.Small_Array(6, u32)
+    for idx in QUAD_INDICES {
+        sa.push_back(&indices, idx)
+    }
+
     mesh := Mesh {
+        origin        = {position.x, position.y, f32(z_index)},
         vertices      = vertices,
-        indices       = QUAD_INDICES,
+        indices       = indices,
         z_index       = z_index,
         texture       = texture,
         y_sort_offset = params.y_sort_offset,
