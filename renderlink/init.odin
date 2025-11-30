@@ -113,6 +113,7 @@ app_init_callback :: proc(ctx: ^Context) -> (ok: bool) {
         usage = {.Uniform, .Copy_Dst},
         mapped_at_creation = false,
     })
+    defer if !ok { gpu.release(ctx.camera_uniform) }
 
     size := app.window_get_size(ctx.base.window)
     camera_set_aspect(&ctx.camera, size)
