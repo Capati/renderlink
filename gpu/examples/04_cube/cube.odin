@@ -309,6 +309,8 @@ quit :: proc(self: ^Application) {
     gpu.release(self.uniform_buffer)
     gpu.release(self.vertex_buffer)
     gpu.release(self.render_pipeline)
+
+    app.destroy(self)
 }
 
 resize :: proc(self: ^Application, size: app.Vec2u) {

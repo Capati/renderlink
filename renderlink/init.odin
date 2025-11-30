@@ -94,7 +94,9 @@ init :: proc(
 // initialization callback.
 app_init_callback :: proc(ctx: ^Context) -> (ok: bool) {
     context.allocator = ctx.allocator
-    defer if !ok { free(ctx) }
+    defer if !ok {
+        free(ctx)
+    }
 
     // Initialize pool of handles
     pool_init(&ctx.textures)
@@ -419,5 +421,6 @@ destroy :: proc(ctx: ^Context) {
 
     gpu.release(ctx.camera_uniform)
 
+    app.destroy(ctx)
     free(ctx)
 }

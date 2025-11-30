@@ -176,6 +176,8 @@ event :: proc(self: ^Application, event: app.Event) -> (ok: bool) {
 quit :: proc(self: ^Application) {
     gpu.buffer_release(self.vertex_buffer)
     gpu.render_pipeline_release(self.render_pipeline)
+
+    app.destroy(self)
 }
 
 main :: proc() {

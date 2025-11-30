@@ -92,7 +92,8 @@ event :: proc(self: ^Application, event: app.Event) -> (ok: bool) {
     return true
 }
 
-quit :: proc(app: ^Application) {
+quit :: proc(self: ^Application) {
+    app.destroy(self)
 }
 
 main :: proc() {

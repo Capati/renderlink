@@ -105,6 +105,8 @@ event :: proc(self: ^Application, event: app.Event) -> (ok: bool) {
 quit :: proc(self: ^Application) {
     wgpu_mu.destroy()
     free(self.mu_ctx)
+
+    app.destroy(self)
 }
 
 resize :: proc(self: ^Application, size: app.Vec2u) {

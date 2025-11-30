@@ -292,7 +292,7 @@ init :: proc(
 
 destroy :: proc(app: ^Application) {
     assert(app != nil, "Invalid application")
-    context = app.custom_context
+    context.allocator = app.allocator
 
     gpu.surface_capabilities_free_members(app.caps)
 

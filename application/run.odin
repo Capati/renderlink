@@ -19,7 +19,6 @@ run :: proc(app: ^Application) {
         if app.callbacks.quit != nil {
             app.callbacks.quit(app)
         }
-        destroy(app)
     }
 
     // Set up window callbacks

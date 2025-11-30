@@ -199,6 +199,8 @@ quit :: proc(self: ^Application) {
     gpu.buffer_release(self.colors_buffer)
     gpu.buffer_release(self.positions_buffer)
     gpu.render_pipeline_release(self.render_pipeline)
+
+    app.destroy(self)
 }
 
 main :: proc() {
