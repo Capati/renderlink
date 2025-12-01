@@ -44,6 +44,8 @@ Application :: struct {
     food_texture:       rl.Texture,
     body_texture:       rl.Texture,
     background_texture: rl.Texture,
+    eat_sound:          rl.Sound,
+    crash_sound:        rl.Sound,
     bounds: struct {
         min, max:                 rl.Vec2f,
         word_width, world_height: f32,
@@ -67,6 +69,13 @@ init :: proc(self: ^Application) -> (ok: bool) {
     self.background_texture = rl.load_texture(self,
         "assets/snake/background.png", { address_mode = .Repeat }) or_return
     defer if !ok { rl.texture_destroy(self, self.background_texture) }
+
+    // Load sounds
+    self.eat_sound = rl.sound_load(self, "assets/snake/eat.wav") or_return
+    defer if !ok { rl.sound_destroy(self, self.eat_sound) }
+
+    self.crash_sound = rl.sound_load(self, "assets/snake/crash.wav") or_return
+    defer if !ok { rl.sound_destroy(self, self.crash_sound) }
 
     return true // init ok
 }
@@ -128,7 +137,7 @@ place_food :: proc(self: ^Application) {
 
 game_over :: proc(self: ^Application) {
     self.is_game_over = true
-    // rl.sound_play(crash_sound)
+    rl.sound_play(self, self.crash_sound)
 }
 
 draw :: proc(self: ^Application, dt: f32) -> (ok: bool) {
@@ -193,7 +202,7 @@ draw :: proc(self: ^Application, dt: f32) -> (ok: bool) {
                 self.snake.length += 1
                 self.snake.body[self.snake.length - 1] = next_part_pos
                 place_food(self)
-                // rl.sound_play(eat_sound)
+                rl.sound_play(self, self.eat_sound)
             }
 
             self.tick_timer = self.tick_rate + self.tick_timer
@@ -255,6 +264,9 @@ event :: proc(self: ^Application, event: rl.Event) -> (ok: bool) {
 }
 
 quit :: proc(self: ^Application) {
+    rl.sound_destroy(self, self.eat_sound)
+    rl.sound_destroy(self, self.crash_sound)
+
     rl.texture_destroy(self, self.background_texture)
     rl.texture_destroy(self, self.body_texture)
     rl.texture_destroy(self, self.food_texture)
