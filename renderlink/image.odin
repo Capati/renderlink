@@ -9,13 +9,13 @@ import "core:mem"
 // Image loaders
 import "core:image"
 import "core:image/bmp"
-import "core:image/jpeg"
+// import "core:image/jpeg"
 import "core:image/png"
 import "core:image/tga"
 
 _ :: png
 _ :: tga
-_ :: jpeg
+// _ :: jpeg
 _ :: bmp
 
 // Local libs
