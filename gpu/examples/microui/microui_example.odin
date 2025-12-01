@@ -10,7 +10,7 @@ import mu "vendor:microui"
 // Local packages
 import "../../../gpu"
 import app "../../../application"
-import wgpu_mu "../../../utils/microui"
+import wgpu_mu "../../../gpu/utils/microui"
 
 CLIENT_WIDTH  :: 800
 CLIENT_HEIGHT :: 600

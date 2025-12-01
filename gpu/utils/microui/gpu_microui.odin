@@ -8,7 +8,7 @@ import intr "base:intrinsics"
 import mu "vendor:microui"
 
 // Local packages
-import "../../gpu"
+import gpu "../../"
 
 BUFFER_SIZE :: 16384
 
