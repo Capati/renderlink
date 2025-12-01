@@ -22,7 +22,7 @@ Context :: struct {
     textures:         Pool(Texture_Impl),
     shaders:          Pool(Shader_Impl),
 
-    // Resources
+    // Graphics resources
     default_texture:  Texture,
     sprite_shader:    Shader,
     vertex_buffer:    Sized_Buffer,
@@ -47,6 +47,9 @@ Context :: struct {
     render_queues:    Render_Queues,
     staging_vertices: [dynamic]Sprite_Vertex,
     staging_indices:  [dynamic]u32,
+
+    // Audio
+    audio_ctx:        Audio_Context,
 
     // Internal
     arena:            mem.Dynamic_Arena, // frame allocator
@@ -195,6 +198,9 @@ app_init_callback :: proc(ctx: ^Context) -> (ok: bool) {
 
     // Frame allocator
     mem.dynamic_arena_init(&ctx.arena)
+
+    // Init audio context
+    init_audio_context(&ctx.audio_ctx) or_return
 
     // Call user initialization
     if ctx.user_callbacks.init != nil && !ctx.user_callbacks.init(ctx) {
@@ -385,6 +391,8 @@ app_quit_callback :: proc(ctx: ^Context) {
 
 destroy :: proc(ctx: ^Context) {
     context.allocator = ctx.allocator
+
+    audio_context_destroy(&ctx.audio_ctx)
 
     mem.dynamic_arena_destroy(&ctx.arena)
 
