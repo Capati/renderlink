@@ -249,6 +249,7 @@ app_draw_callback :: proc(ctx: ^Context, dt: f32) -> bool {
 
     // The allocator for this frame
     arena_alloc := mem.dynamic_arena_allocator(&ctx.arena)
+    defer mem.dynamic_arena_reset(&ctx.arena)
 
     // Setup shared render state
     ortho_matrix := camera_build_view_projection_matrix(&ctx.camera)
@@ -359,7 +360,6 @@ app_draw_callback :: proc(ctx: ^Context, dt: f32) -> bool {
     gpu.queue_submit(ctx.base.queue, { cmdbuf })
     gpu.surface_present(ctx.base.surface)
 
-    mem.dynamic_arena_free_all(&ctx.arena)
     render_queues_free(&ctx.render_queues)
 
     return true
