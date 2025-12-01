@@ -3286,7 +3286,10 @@ gl_execute_render_pass_set_bind_group :: proc(
             )
 
         case GL_Sampler_Binding:
-            gl.BindSampler(entry.binding, res.sampler.handle)
+            // FIXME(Todo): currently OpenGL is using combined texture/sampler,
+            // this forces to use the same binding, but the entries should match
+            // correct order
+            gl.BindSampler(entry.binding-1, res.sampler.handle)
 
         case GL_Texture_View_Binding:
             texture_impl := _gl_texture_get_impl(res.texture_view.texture, loc)

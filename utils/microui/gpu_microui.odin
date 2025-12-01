@@ -156,7 +156,7 @@ init :: proc(info: Init_Info, loc := #caller_location) {
                     },
                 },
                 {
-                    binding = 1,
+                    binding = 2,
                     visibility = {.Fragment},
                     type = gpu.Sampler_Binding_Layout{ type = .Filtering },
                 },
@@ -179,7 +179,7 @@ init :: proc(info: Init_Info, loc := #caller_location) {
                     },
                 },
                 { binding = 1, resource = r.atlas_view },
-                { binding = 1, resource = r.atlas_sampler },
+                { binding = 2, resource = r.atlas_sampler },
             },
         },
     )

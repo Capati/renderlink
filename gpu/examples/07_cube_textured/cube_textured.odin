@@ -173,7 +173,7 @@ init :: proc(self: ^Application) -> (ok: bool) {
                     },
                 },
                 {
-                    binding = 1,
+                    binding = 2,
                     visibility = {.Fragment},
                     type = gpu.Sampler_Binding_Layout {
                         type = .Filtering,
@@ -257,7 +257,7 @@ init :: proc(self: ^Application) -> (ok: bool) {
                     resource = texture_view,
                 },
                 {
-                    binding = 1,
+                    binding = 2,
                     resource = self.sampler,
                 },
             },
