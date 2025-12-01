@@ -15,11 +15,11 @@ Internal_Handle :: struct #packed {
 
 #assert(size_of(Handle) == size_of(Internal_Handle))
 
-from_handle :: #force_inline proc(handle: Internal_Handle) -> Handle {
+from_handle :: #force_inline proc "contextless" (handle: Internal_Handle) -> Handle {
     return transmute(Handle)handle
 }
 
-to_handle :: #force_inline proc(#any_int handle: Handle) -> Internal_Handle {
+to_handle :: #force_inline proc "contextless" (#any_int handle: Handle) -> Internal_Handle {
     return transmute(Internal_Handle)handle
 }
 
