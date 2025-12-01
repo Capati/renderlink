@@ -1356,8 +1356,11 @@ js_render_pass_set_vertex_buffer :: proc(
     size: u64,
     loc := #caller_location,
 ) {
-    size := size if size != WHOLE_SIZE else js_buffer_get_size(buffer)
-    webgpuRenderPassEncoderSetVertexBuffer(render_pass, slot, buffer, offset, size)
+    // Calculate remaining size from offset
+    buffer_size := js_buffer_get_size(buffer)
+    actual_size := size != WHOLE_SIZE ? size : (buffer_size - offset)
+
+    webgpuRenderPassEncoderSetVertexBuffer(render_pass, slot, buffer, offset, actual_size)
 }
 
 js_render_pass_set_index_buffer :: proc(
@@ -1368,10 +1371,10 @@ js_render_pass_set_index_buffer :: proc(
     size: u64,
     loc := #caller_location,
 ) {
-    size := size > 0 && size != WHOLE_SIZE \
-        ? size \
-        : buffer_get_size(buffer)
-    webgpuRenderPassEncoderSetIndexBuffer(render_pass, buffer, format, offset, size)
+    buffer_size := buffer_get_size(buffer)
+    actual_size := (size > 0 && size != WHOLE_SIZE) ? size : (buffer_size - offset)
+
+    webgpuRenderPassEncoderSetIndexBuffer(render_pass, buffer, format, offset, actual_size)
 }
 
 js_render_pass_draw :: proc(
