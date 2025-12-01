@@ -3,6 +3,8 @@ package application
 
 // Core
 import "base:runtime"
+import "core:mem"
+import "core:log"
 
 foreign import "odin_env"
 
@@ -17,16 +19,16 @@ load_file :: proc(filename: string, allocator := context.allocator) -> (data: []
     temp_buffer := make([]u8, 1 * mem.Megabyte, context.temp_allocator)
 
     // Load file into buffer
-    length := load_file_sync(file_path, raw_data(temp_buffer), len(temp_buffer))
+    length := load_file_sync(filename, raw_data(temp_buffer), len(temp_buffer))
 
     if length <= 0 {
-        log.errorf("Failed to load file: %s", file_path)
+        log.errorf("Failed to load file: %s", filename)
         return
     }
 
     // Copy to final buffer
-    code = make([]u8, length, allocator)
-    copy(code, temp_buffer[:length])
+    data = make([]u8, length, allocator)
+    copy(data, temp_buffer[:length])
 
-    return code, true
+    return data, true
 }

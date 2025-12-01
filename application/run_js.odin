@@ -4,10 +4,13 @@ package application
 // Core
 import "core:sys/wasm/js"
 
+@(private="file")
+app_context: ^Application
+
 @(private="file", export)
 step :: proc(dt: f32) -> bool {
+    if app_context == nil do return true
     app := app_context
-    if app == nil do return true
     context = app.custom_context
     if !app.prepared {
         return true
@@ -23,8 +26,8 @@ step :: proc(dt: f32) -> bool {
     timer_begin_frame(&app.timer)
 
     // Application iteration
-    if app.callbacks.step != nil {
-        if !app.callbacks.step(app, f32(timer_get_delta(&app.timer))) {
+    if app.callbacks.draw != nil {
+        if !app.callbacks.draw(app, f32(timer_get_delta(&app.timer))) {
             app.running = false
         }
     }
@@ -56,6 +59,8 @@ run :: proc(app := app_context) -> (ok: bool) {
 
     app.prepared = true
     app.running = true
+
+    app_context = app
 
     return true
 }

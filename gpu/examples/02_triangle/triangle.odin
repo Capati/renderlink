@@ -178,6 +178,7 @@ quit :: proc(self: ^Application) {
     gpu.render_pipeline_release(self.render_pipeline)
 
     app.destroy(self)
+    free(self)
 }
 
 main :: proc() {
@@ -204,7 +205,6 @@ main :: proc() {
     }
 
     ctx := new(Application)
-    defer free(ctx)
 
     callbacks := app.Application_Callbacks{
         init  = app.App_Init_Callback(init),

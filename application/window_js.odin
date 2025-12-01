@@ -93,6 +93,14 @@ _window_get_size :: proc(window: Window) -> (size: Vec2u) {
     return
 }
 
+@(require_results)
+_window_get_title :: proc(window: Window) -> string {
+    return ""
+}
+
+_window_set_title :: proc(window: Window, title: string) {
+}
+
 _window_switch_to_fullscreen :: proc (window: Window, mode: Video_Mode) {
 }
 
@@ -190,20 +198,20 @@ _window_resize_callback :: proc(event: js.Event) {
         }
     }
 
-    dispatch_event(Resize_Event{ new_size })
+    dispatch_event(impl.app, Resize_Event{ new_size })
 }
 
 @(private)
 _window_visibility_callback :: proc(event: js.Event) {
-    // impl := cast(^Window_Impl)event.user_data
+    impl := cast(^Window_Impl)event.user_data
     // window := cast(Window)impl
     is_visible := event.visibility_change.is_visible
-    dispatch_event(Restored_Event{ restored = is_visible })
+    dispatch_event(impl.app, Restored_Event{ restored = is_visible })
 }
 
 @(private)
 _window_mouse_button_callback :: proc(event: js.Event) {
-    // impl := cast(^Window_Impl)event.user_data
+    impl := cast(^Window_Impl)event.user_data
     // window := cast(Window)impl
 
     dpi := js.device_pixel_ratio()
@@ -223,15 +231,15 @@ _window_mouse_button_callback :: proc(event: js.Event) {
 
     #partial switch event.kind {
     case .Mouse_Down, .Click:
-        dispatch_event(Mouse_Button_Pressed_Event{button = button, pos = pos})
+        dispatch_event(impl.app, Mouse_Button_Pressed_Event{button = button, pos = pos})
     case .Mouse_Up:
-        dispatch_event(Mouse_Button_Released_Event{button = button, pos = pos})
+        dispatch_event(impl.app, Mouse_Button_Released_Event{button = button, pos = pos})
     }
 }
 
 @(private)
 _window_mouse_move_callback :: proc(event: js.Event) {
-    // impl := cast(^Window_Impl)event.user_data
+    impl := cast(^Window_Impl)event.user_data
     // context = impl.custom_context
     // window := cast(Window)impl
 
@@ -257,7 +265,7 @@ _window_mouse_move_callback :: proc(event: js.Event) {
         action = .Pressed
     }
 
-    dispatch_event(Mouse_Moved_Event{
+    dispatch_event(impl.app, Mouse_Moved_Event{
         pos = pos,
         button = button,
         action = action,
@@ -266,19 +274,19 @@ _window_mouse_move_callback :: proc(event: js.Event) {
 
 @(private)
 _window_scroll_callback :: proc(event: js.Event) {
-    // impl := cast(^Window_Impl)event.user_data
+    impl := cast(^Window_Impl)event.user_data
     // window := cast(Window)impl
 
     delta := Vec2f{
         cast(f32)event.wheel.delta.x,
         cast(f32)event.wheel.delta.y,
     }
-    dispatch_event(Mouse_Wheel_Event(delta))
+    dispatch_event(impl.app, Mouse_Wheel_Event(delta))
 }
 
 @(private)
 _window_context_menu_callback :: proc(event: js.Event) {
-    // impl := cast(^Window_Impl)event.user_data
+    impl := cast(^Window_Impl)event.user_data
     // window := cast(Window)impl
 
     dpi := js.device_pixel_ratio()
@@ -290,7 +298,7 @@ _window_context_menu_callback :: proc(event: js.Event) {
     }
 
     // Dispatch right-click event for context menu
-    dispatch_event(Mouse_Button_Pressed_Event{
+    dispatch_event(impl.app, Mouse_Button_Pressed_Event{
         button = .Right,
         pos = pos,
     })
@@ -298,7 +306,7 @@ _window_context_menu_callback :: proc(event: js.Event) {
 
 @(private)
 _window_key_callback :: proc(_event: js.Event) {
-    // impl := cast(^Window_Impl)_event.user_data
+    impl := cast(^Window_Impl)_event.user_data
     // context = impl.custom_context
     // window := cast(Window)impl
 
@@ -312,7 +320,7 @@ _window_key_callback :: proc(_event: js.Event) {
         alt      = _event.key.alt,
     }
 
-    app := app_context
+    app := impl.app
 
     #partial switch _event.kind {
     case .Key_Down:
@@ -325,7 +333,7 @@ _window_key_callback :: proc(_event: js.Event) {
             }
         }
 
-        dispatch_event(Key_Pressed_Event(event))
+        dispatch_event(impl.app, Key_Pressed_Event(event))
     case .Key_Up:
         // Update keyboard state
         if key != .Unknown {
@@ -333,7 +341,7 @@ _window_key_callback :: proc(_event: js.Event) {
             app.keyboard.last_key_released = key
         }
 
-        dispatch_event(Key_Released_Event(event))
+        dispatch_event(impl.app, Key_Released_Event(event))
     }
 }
 

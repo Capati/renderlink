@@ -129,165 +129,169 @@ init :: proc(
 
     gpu.instance_request_adapter(
         app.instance, adapter_options, { callback = on_adapter, userdata1 = app })
+}
 
-    on_adapter :: proc(
-        status: gpu.Request_Adapter_Status,
-        adapter: gpu.Adapter,
-        message: string,
-        userdata1: rawptr,
-        userdata2: rawptr,
-    ) {
-        app := cast(^Application)userdata1
-        context = app.custom_context
+on_adapter :: proc "c" (
+    status: gpu.Request_Adapter_Status,
+    adapter: gpu.Adapter,
+    message: string,
+    userdata1: rawptr,
+    userdata2: rawptr,
+) {
+    assert_contextless(userdata1 != nil)
 
-        // Validate adapter request
-        if status != .Success || adapter == nil {
-            log.panicf("Adapter request failed: [%v] %s", status, message)
-        }
+    app := cast(^Application)userdata1
+    context = app.custom_context
 
-        app.adapter = adapter
-
-        when ODIN_OS != .JS {
-            runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
-            ta := context.temp_allocator
-
-            adapter_info := gpu.adapter_get_info(app.adapter)
-            defer gpu.adapter_info_free_members(adapter_info)
-
-            log.infof("Selected adapter:\n%s", gpu.adapter_info_string(adapter_info, ta))
-        }
-
-        uncaptured_error_callback :: proc(
-            device: ^gpu.Device,
-            type: gpu.Error_Type,
-            message: string,
-            userdata1: rawptr,
-            userdata2: rawptr,
-        ) {
-            // context = runtime.default_context()
-            // log.info(type)
-            // log.info(message)
-        }
-
-        // Request device with specified requirements
-        device_descriptor := gpu.Device_Descriptor {
-            label = "Device",
-            required_features = {.Clip_Distances},
-            required_limits   = app.settings.required_limits,
-            uncaptured_error_callback_info = {
-                callback = uncaptured_error_callback,
-            },
-        }
-
-        gpu.adapter_request_device(app.adapter, device_descriptor, {
-            callback = on_device, userdata1 = app,
-        })
+    // Validate adapter request
+    if status != .Success || adapter == nil {
+        log.panicf("Adapter request failed: [%v] %s", status, message)
     }
 
-    on_device :: proc(
-        status: gpu.Request_Device_Status,
-        device: gpu.Device,
-        message: string,
-        userdata1: rawptr,
-        userdata2: rawptr,
-    ) {
-        app := cast(^Application)userdata1
-        context = app.custom_context
+    app.adapter = adapter
 
-        // Validate device request
-        if status != .Success || device == nil {
-            log.panicf("Device request failed: [%v] %s", status, message)
-        }
+    when ODIN_OS != .JS {
+        runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
+        ta := context.temp_allocator
 
-        app.device = device
+        adapter_info := gpu.adapter_get_info(app.adapter)
+        defer gpu.adapter_info_free_members(adapter_info)
 
-        // Get default queue
-        app.queue = gpu.device_get_queue(app.device)
-
-        // Get surface capabilities
-        app.caps = gpu.surface_get_capabilities(app.surface, app.adapter)
-
-        // Determine best surface format
-        preferred_format: gpu.Texture_Format
-        if app.settings.desired_surface_format != .Undefined {
-            // Check if desired format is supported
-            for format in app.caps.formats {
-                if app.settings.desired_surface_format == format {
-                    preferred_format = format
-                    break
-                }
-            }
-        }
-
-        // Fallback to first available format if desired format not found
-        if preferred_format == .Undefined {
-            preferred_format = app.caps.formats[0]
-        }
-
-        // Handle sRGB configuration
-        app.is_srgb = gpu.texture_format_is_srgb(preferred_format)
-        if app.settings.remove_srgb_from_surface && app.is_srgb {
-            app.is_srgb = false
-            preferred_format = gpu.texture_format_remove_srgb_suffix(preferred_format)
-        }
-
-        log.debugf("Preferred surface format: %v", preferred_format)
-
-        // Determine present mode with validation
-        present_mode := app.settings.desired_present_mode
-        if present_mode == .Undefined {
-            present_mode = .Fifo  // Safe default
-        } else if present_mode != .Fifo {
-            // Validate that desired present mode is supported
-            mode_supported := false
-            for mode in app.caps.present_modes {
-                if present_mode == mode {
-                    mode_supported = true
-                    break
-                }
-            }
-
-            if !mode_supported {
-                log.warnf(
-                    "Desired present mode %v not supported, falling back to %v", present_mode)
-                present_mode = gpu.PRESENT_MODE_DEFAULT
-            }
-        }
-
-        log.debugf("Selected present mode: %v", present_mode)
-
-        // Get current window size
-        app.framebuffer_size = window_get_size(app.window)
-
-        device_features := gpu.device_get_features(app.device)
-
-        // Configure surface usage based on format capabilities
-        surface_format_features := gpu.texture_format_guaranteed_format_features(
-            preferred_format, device_features)
-
-        surface_allowed_usages := surface_format_features.allowed_usages
-        // DX12 backend limitation: remove TextureBinding usage for surface textures
-        if .Texture_Binding in surface_allowed_usages {
-            surface_allowed_usages -= { .Texture_Binding }
-        }
-
-        // Create final surface configuration
-        app.config = gpu.Surface_Configuration {
-            usage        = { .Render_Attachment },
-            format       = preferred_format,
-            width        = app.framebuffer_size.x,
-            height       = app.framebuffer_size.y,
-            present_mode = present_mode,
-            alpha_mode   = .Auto,
-        }
-
-        gpu.surface_configure(app.surface, app.device, app.config)
-
-        // window_add_resize_callback(app.window, { gpu_resize_surface, app.gpu })
-
-        // Initialization complete - start main application loop
-        run(app)
+        log.infof("Selected adapter:\n%s", gpu.adapter_info_string(adapter_info, ta))
     }
+
+    // Request device with specified requirements
+    device_descriptor := gpu.Device_Descriptor {
+        label = "Device",
+        required_features = {.Clip_Distances},
+        required_limits   = app.settings.required_limits,
+        uncaptured_error_callback_info = {
+            callback = uncaptured_error_callback,
+        },
+    }
+
+    gpu.adapter_request_device(app.adapter, device_descriptor, {
+        callback = on_device, userdata1 = app,
+    })
+}
+
+uncaptured_error_callback :: proc "c" (
+    device: ^gpu.Device,
+    type: gpu.Error_Type,
+    message: string,
+    userdata1: rawptr,
+    userdata2: rawptr,
+) {
+    // context = runtime.default_context()
+    // log.info(type)
+    // log.info(message)
+}
+
+on_device :: proc "c" (
+    status: gpu.Request_Device_Status,
+    device: gpu.Device,
+    message: string,
+    userdata1: rawptr,
+    userdata2: rawptr,
+) {
+    assert_contextless(userdata1 != nil)
+
+    app := cast(^Application)userdata1
+    context = app.custom_context
+
+    // Validate device request
+    if status != .Success || device == nil {
+        log.panicf("Device request failed: [%v] %s", status, message)
+    }
+
+    app.device = device
+
+    // Get default queue
+    app.queue = gpu.device_get_queue(app.device)
+
+    // Get surface capabilities
+    app.caps = gpu.surface_get_capabilities(app.surface, app.adapter)
+
+    // Determine best surface format
+    preferred_format: gpu.Texture_Format
+    if app.settings.desired_surface_format != .Undefined {
+        // Check if desired format is supported
+        for format in app.caps.formats {
+            if app.settings.desired_surface_format == format {
+                preferred_format = format
+                break
+            }
+        }
+    }
+
+    // Fallback to first available format if desired format not found
+    if preferred_format == .Undefined {
+        preferred_format = app.caps.formats[0]
+    }
+
+    // Handle sRGB configuration
+    app.is_srgb = gpu.texture_format_is_srgb(preferred_format)
+    if app.settings.remove_srgb_from_surface && app.is_srgb {
+        app.is_srgb = false
+        preferred_format = gpu.texture_format_remove_srgb_suffix(preferred_format)
+    }
+
+    log.debugf("Preferred surface format: %v", preferred_format)
+
+    // Determine present mode with validation
+    present_mode := app.settings.desired_present_mode
+    if present_mode == .Undefined {
+        present_mode = .Fifo  // Safe default
+    } else if present_mode != .Fifo {
+        // Validate that desired present mode is supported
+        mode_supported := false
+        for mode in app.caps.present_modes {
+            if present_mode == mode {
+                mode_supported = true
+                break
+            }
+        }
+
+        if !mode_supported {
+            log.warnf(
+                "Desired present mode %v not supported, falling back to %v", present_mode)
+            present_mode = gpu.PRESENT_MODE_DEFAULT
+        }
+    }
+
+    log.debugf("Selected present mode: %v", present_mode)
+
+    // Get current window size
+    app.framebuffer_size = window_get_size(app.window)
+
+    device_features := gpu.device_get_features(app.device)
+
+    // Configure surface usage based on format capabilities
+    surface_format_features := gpu.texture_format_guaranteed_format_features(
+        preferred_format, device_features)
+
+    surface_allowed_usages := surface_format_features.allowed_usages
+    // DX12 backend limitation: remove TextureBinding usage for surface textures
+    if .Texture_Binding in surface_allowed_usages {
+        surface_allowed_usages -= { .Texture_Binding }
+    }
+
+    // Create final surface configuration
+    app.config = gpu.Surface_Configuration {
+        usage        = { .Render_Attachment },
+        format       = preferred_format,
+        width        = app.framebuffer_size.x,
+        height       = app.framebuffer_size.y,
+        present_mode = present_mode,
+        alpha_mode   = .Auto,
+    }
+
+    gpu.surface_configure(app.surface, app.device, app.config)
+
+    // window_add_resize_callback(app.window, { gpu_resize_surface, app.gpu })
+
+    // Initialization complete - start main application loop
+    run(app)
 }
 
 destroy :: proc(app: ^Application) {

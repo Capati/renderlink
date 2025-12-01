@@ -126,7 +126,7 @@ init :: proc(self: ^Application) -> (ok: bool) {
 
     // Load and create a shader module
     vertex_source :=
-        common.load_shader_source(self.device, "05_cube_textured", .Vertex, ta) or_return
+        common.load_shader_source(self.device, "07_cube_textured", .Vertex, ta) or_return
     vertex_shader := gpu.device_create_shader_module(
         self.device,
         {
@@ -138,7 +138,7 @@ init :: proc(self: ^Application) -> (ok: bool) {
     defer gpu.release(vertex_shader)
 
     fragment_source :=
-        common.load_shader_source(self.device, "05_cube_textured", .Fragment, ta) or_return
+        common.load_shader_source(self.device, "07_cube_textured", .Fragment, ta) or_return
     fragment_shader := gpu.device_create_shader_module(
         self.device,
         {
@@ -331,6 +331,7 @@ quit :: proc(self: ^Application) {
     gpu.release(self.vertex_buffer)
 
     app.destroy(self)
+    free(self)
 }
 
 resize :: proc(self: ^Application, size: app.Vec2u) {
@@ -406,7 +407,6 @@ main :: proc() {
     }
 
     ctx := new(Application)
-    defer free(ctx)
 
     callbacks := app.Application_Callbacks{
         init  = app.App_Init_Callback(init),

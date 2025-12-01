@@ -112,11 +112,11 @@ if "%WEB_BUILD%"=="true" (
 		set ERROR_OCCURRED=true
 	) else (
 		:: Build gpu.js
-		pushd ..\wasm
+		pushd .\wasm
 		call tsc
 		popd
-		copy "..\wasm\odin.js" "%OUT%\odin.js" >nul
-		copy "..\wasm\gpu.js" "%OUT%\gpu.js" >nul
+		copy ".\wasm\odin.js" "%OUT%\odin.js" >nul
+		copy ".\wasm\gpu.js" "%OUT%\gpu.js" >nul
 		echo [BUILD] --- Web build completed successfully.
 	)
 ) else (
@@ -141,7 +141,8 @@ echo [BUILD] --- Build process completed successfully.
 set "HASH_FILE=%OUT%\.shader_hash"
 
 :: Look for shader.slang in the build target directory
-set "SHADER_FILE=%BUILD_TARGET%\%BUILD_TARGET%.slang"
+for %%I in ("%BUILD_TARGET%") do set "BUILD_TARGET_NAME=%%~nxI"
+set "SHADER_FILE=%BUILD_TARGET%\%BUILD_TARGET_NAME%.slang"
 if not exist "%SHADER_FILE%" (
 	goto :skip_shaders
 )
@@ -190,7 +191,7 @@ if "!NEEDS_COMPILE!"=="true" (
 	if not exist "%OUT%\shaders\MSL" mkdir "%OUT%\shaders\MSL"
 	if not exist "%OUT%\shaders\WGSL" mkdir "%OUT%\shaders\compiled\WGSL"
 
-	echo [SHADERS] --- Compiling %BUILD_TARGET%.slang...
+	echo [SHADERS] --- Compiling %BUILD_TARGET_NAME%.slang...
 
 	set "SHADER_ERROR=false"
 
@@ -200,7 +201,7 @@ if "!NEEDS_COMPILE!"=="true" (
 		-stage vertex ^
 		-target glsl ^
 		-profile glsl_450 ^
-		-o "%OUT%\shaders\GLSL\%BUILD_TARGET%.vert"
+		-o "%OUT%\shaders\GLSL\%BUILD_TARGET_NAME%.vert"
 	if errorlevel 1 (
 		echo [SHADERS] --- Error: Failed to compile vertex shader to GLSL
 		set "SHADER_ERROR=true"
@@ -212,7 +213,7 @@ if "!NEEDS_COMPILE!"=="true" (
 		-stage fragment ^
 		-target glsl ^
 		-profile glsl_450 ^
-		-o "%OUT%\shaders\GLSL\%BUILD_TARGET%.frag"
+		-o "%OUT%\shaders\GLSL\%BUILD_TARGET_NAME%.frag"
 	if errorlevel 1 (
 		echo [SHADERS] --- Error: Failed to compile fragment shader to GLSL
 		set "SHADER_ERROR=true"
@@ -223,7 +224,7 @@ if "!NEEDS_COMPILE!"=="true" (
 	rem 	-entry vs_main ^
 	rem 	-stage vertex ^
 	rem 	-target spirv ^
-	rem 	-o "%OUT%\shaders\SPIRV\%BUILD_TARGET%.vert.spv"
+	rem 	-o "%OUT%\shaders\SPIRV\%BUILD_TARGET_NAME%.vert.spv"
 
 	rem if errorlevel 1 (
 	rem 	echo [SHADERS] --- Error: Failed to compile vertex shader to SPIR-V
@@ -235,7 +236,7 @@ if "!NEEDS_COMPILE!"=="true" (
 	rem 	-entry fs_main ^
 	rem 	-stage fragment ^
 	rem 	-target spirv ^
-	rem 	-o "%OUT%\shaders\SPIRV\%BUILD_TARGET%.frag.spv"
+	rem 	-o "%OUT%\shaders\SPIRV\%BUILD_TARGET_NAME%.frag.spv"
 
 	rem if errorlevel 1 (
 	rem 	echo [SHADERS] --- Error: Failed to compile fragment shader to SPIR-V
@@ -248,7 +249,7 @@ if "!NEEDS_COMPILE!"=="true" (
 	rem 	-stage vertex ^
 	rem 	-target dxil ^
 	rem 	-profile sm_6_0 ^
-	rem 	-o "%OUT%\shaders\DXIL\%BUILD_TARGET%.vert.dxil"
+	rem 	-o "%OUT%\shaders\DXIL\%BUILD_TARGET_NAME%.vert.dxil"
 
 	rem if errorlevel 1 (
 	rem 	echo [SHADERS] --- Error: Failed to compile vertex shader to DXIL
@@ -261,7 +262,7 @@ if "!NEEDS_COMPILE!"=="true" (
 	rem 	-stage fragment ^
 	rem 	-target dxil ^
 	rem 	-profile sm_6_0 ^
-	rem 	-o "%OUT%\shaders\DXIL\%BUILD_TARGET%.frag.dxil"
+	rem 	-o "%OUT%\shaders\DXIL\%BUILD_TARGET_NAME%.frag.dxil"
 
 	rem if errorlevel 1 (
 	rem 	echo [SHADERS] --- Error: Failed to compile fragment shader to DXIL
@@ -274,7 +275,7 @@ if "!NEEDS_COMPILE!"=="true" (
 	rem 	-stage vertex ^
 	rem 	-target metal ^
 	rem 	-fvk-b-shift 0 0 ^
-	rem 	-o "%OUT%\shaders\MSL\%BUILD_TARGET%.vert.metal"
+	rem 	-o "%OUT%\shaders\MSL\%BUILD_TARGET_NAME%.vert.metal"
 
 	rem if errorlevel 1 (
 	rem 	echo [SHADERS] --- Error: Failed to compile vertex shader to MSL
@@ -287,7 +288,7 @@ if "!NEEDS_COMPILE!"=="true" (
 	rem 	-stage fragment ^
 	rem 	-target metal ^
 	rem 	-fvk-b-shift 0 0 ^
-	rem 	-o "%OUT%\shaders\MSL\%BUILD_TARGET%.frag.metal"
+	rem 	-o "%OUT%\shaders\MSL\%BUILD_TARGET_NAME%.frag.metal"
 
 	rem if errorlevel 1 (
 	rem 	echo [SHADERS] --- Error: Failed to compile fragment shader to MSL
@@ -299,7 +300,7 @@ if "!NEEDS_COMPILE!"=="true" (
 		-entry vs_main ^
 		-stage vertex ^
 		-target wgsl ^
-		-o "%OUT%\shaders\WGSL\%BUILD_TARGET%.vert.wgsl"
+		-o "%OUT%\shaders\WGSL\%BUILD_TARGET_NAME%.vert.wgsl"
 	if errorlevel 1 (
 		echo [SHADERS] --- Error: Failed to compile vertex shader to WGSL
 		set "SHADER_ERROR=true"
@@ -309,7 +310,7 @@ if "!NEEDS_COMPILE!"=="true" (
 		-entry fs_main ^
 		-stage fragment ^
 		-target wgsl ^
-		-o "%OUT%\shaders\WGSL\%BUILD_TARGET%.frag.wgsl"
+		-o "%OUT%\shaders\WGSL\%BUILD_TARGET_NAME%.frag.wgsl"
 	if errorlevel 1 (
 		echo [SHADERS] --- Error: Failed to compile fragment shader to WGSL
 		set "SHADER_ERROR=true"

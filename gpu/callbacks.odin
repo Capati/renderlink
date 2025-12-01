@@ -24,7 +24,7 @@ Request_Adapter_Status :: enum {
     Unknown,
 }
 
-Request_Adapter_Callback :: #type proc(
+Request_Adapter_Callback :: #type proc "c" (
     status: Request_Adapter_Status,
     adapter: Adapter,
     message: string,
@@ -45,7 +45,7 @@ Request_Device_Status :: enum {
     Unknown,
 }
 
-Request_Device_Callback :: #type proc(
+Request_Device_Callback :: #type proc "c" (
     status: Request_Device_Status,
     adapter: Device,
     message: string,
@@ -75,17 +75,9 @@ Error_Type :: enum {
     Unknown,
 }
 
-Device_Lost_Callback :: #type proc(
+Device_Lost_Callback :: #type proc "c" (
     device: ^Device,
     reason: Device_Lost_Reason,
-    message: string,
-    userdata1: rawptr,
-    userdata2: rawptr,
-)
-
-Uncaptured_Error_Callback :: #type proc(
-    device: ^Device,
-    type: Error_Type,
     message: string,
     userdata1: rawptr,
     userdata2: rawptr,
@@ -96,6 +88,14 @@ Device_Lost_Callback_Info :: struct {
     userdata1: rawptr,
     userdata2: rawptr,
 }
+
+Uncaptured_Error_Callback :: #type proc "c" (
+    device: ^Device,
+    type: Error_Type,
+    message: string,
+    userdata1: rawptr,
+    userdata2: rawptr,
+)
 
 Uncaptured_Error_Callback_Info :: struct {
     callback:  Uncaptured_Error_Callback,

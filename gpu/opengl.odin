@@ -2365,7 +2365,7 @@ gl_instance_enumarate_adapters :: proc(
         adapter: Adapter,
     }
 
-    on_adpater_sync :: proc(
+    on_adpater_sync :: proc "c" (
         status: Request_Adapter_Status,
         adapter: Adapter,
         message: string,
@@ -3537,7 +3537,13 @@ gl_queue_release :: proc(queue: Queue, loc := #caller_location) {
 // -----------------------------------------------------------------------------
 
 GL_Sampler_Impl :: struct {
-    using base: Queue_Base,
+    // Base
+    label:     String_Buffer_Small,
+    ref:       Ref_Count,
+    device:    Device,
+    allocator: runtime.Allocator,
+
+    // Backend
     handle:     u32,
 }
 

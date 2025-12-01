@@ -107,6 +107,7 @@ quit :: proc(self: ^Application) {
     free(self.mu_ctx)
 
     app.destroy(self)
+    free(self)
 }
 
 resize :: proc(self: ^Application, size: app.Vec2u) {
@@ -155,7 +156,6 @@ main :: proc() {
     }
 
     ctx := new(Application)
-    defer free(ctx)
 
     callbacks := app.Application_Callbacks {
         init  = app.App_Init_Callback(init),

@@ -149,11 +149,14 @@ window_get_refresh_rate :: proc(window: Window) -> u32 {
     return impl.mode.refresh_rate
 }
 
-window_set_application :: _window_set_application
-
 window_get_title :: _window_get_title
 
 window_set_title :: _window_set_title
+
+window_set_application :: proc(window: Window, app: ^Application) {
+    impl := _window_get_impl(window)
+    impl.app = app
+}
 
 // -----------------------------------------------------------------------------
 // @(private)

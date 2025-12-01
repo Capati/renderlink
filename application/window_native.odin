@@ -173,11 +173,6 @@ _window_set_title :: proc {
     _window_set_title_cstring,
 }
 
-_window_set_application :: proc(window: Window, app: ^Application) {
-    impl := _window_get_impl(window)
-    impl.app = app
-}
-
 // -----------------------------------------------------------------------------
 // @(private) impl
 // -----------------------------------------------------------------------------

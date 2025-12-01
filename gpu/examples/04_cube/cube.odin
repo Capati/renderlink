@@ -311,6 +311,7 @@ quit :: proc(self: ^Application) {
     gpu.release(self.render_pipeline)
 
     app.destroy(self)
+    free(self)
 }
 
 resize :: proc(self: ^Application, size: app.Vec2u) {
@@ -352,7 +353,6 @@ main :: proc() {
     }
 
     ctx := new(Application)
-    defer free(ctx)
 
     callbacks := app.Application_Callbacks{
         init  = app.App_Init_Callback(init),

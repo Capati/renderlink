@@ -1,9 +1,7 @@
 #+build js
 package application
 
-import "core:log"
-
-keyboard_update :: proc(app := app_context) #no_bounds_check {
+keyboard_update :: proc(app: ^Application) #no_bounds_check {
     copy(app.keyboard.previous[:], app.keyboard.current[:])
     app.keyboard.last_key_pressed = .Unknown
 }
