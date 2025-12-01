@@ -4,6 +4,8 @@ package shared
 import "core:mem"
 import "core:strings"
 
+_ :: strings
+
 STRLEN :: max(uint)
 
 GPU_STRING_BUFFER_SIZE :: #config(GPU_STRING_BUFFER_SIZE, 256)
