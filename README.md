@@ -20,6 +20,8 @@ A library for building 2D games with the [Odin Progrramming Language][].
 > **This project is extremely work-in-progress, not production ready.**
 > But there is plenty to test and contribute.
 
+Tested in Odin version: `dev-2025-12:ac61f083f`.
+
 ## Packages
 
 This library is divided in different packages:
