@@ -23,7 +23,7 @@ WABBIT_DATA :: #load("wabbit_alpha.png")
 MAX_BUNNIES :: 50000
 GRAVITY : f32 = -1.0
 MAX_VELOCITY : f32 = 32.0
-BUNNIES_PER_TIME :: 100
+BUNNIES_PER_TIME :: 500
 
 Bunny :: struct {
     pos: rl.Vec2f,
