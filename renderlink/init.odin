@@ -11,6 +11,8 @@ import intr "base:intrinsics"
 import app "../application"
 import "../gpu"
 
+BUFFER_SIZE_DEFAULT :: 1024 * 1024
+
 Context :: struct {
     // Base application subtype
     using base:       Application,
@@ -133,11 +135,13 @@ app_init_callback :: proc(ctx: ^Context) -> (ok: bool) {
     defer if !ok { shader_destroy(ctx, ctx.sprite_shader) }
 
     // Create mesh vertex buffer
-    ctx.vertex_buffer = create_buffer(ctx, "Mesh Vertex Buffer", 1024 * 1024, {.Vertex})
+    ctx.vertex_buffer = create_buffer(
+        ctx, "Mesh Vertex Buffer", BUFFER_SIZE_DEFAULT, {.Vertex, .Copy_Dst})
     defer if !ok { buffer_destroy(&ctx.vertex_buffer) }
 
     // Create mesh index buffer
-    ctx.index_buffer = create_buffer(ctx, "Mesh Index Buffer", 1024 * 1024, { .Index })
+    ctx.index_buffer = create_buffer(
+        ctx, "Mesh Index Buffer", BUFFER_SIZE_DEFAULT, { .Index, .Copy_Dst })
     defer if !ok { buffer_destroy(&ctx.index_buffer) }
 
     // Create the default texture layout
@@ -329,7 +333,7 @@ app_draw_callback :: proc(ctx: ^Context, dt: f32) -> bool {
         gpu.render_pass_set_vertex_buffer(
             rpass,
             0, // slot
-            sized_buffer_get_current(&ctx.vertex_buffer),
+            ctx.vertex_buffer.buffer,
             vertex_offset,
             gpu.WHOLE_SIZE,
         )
@@ -338,7 +342,7 @@ app_draw_callback :: proc(ctx: ^Context, dt: f32) -> bool {
         index_offset := u64(batch.index_offset * size_of(u32))
         gpu.render_pass_set_index_buffer(
             rpass,
-            sized_buffer_get_current(&ctx.index_buffer),
+            ctx.index_buffer.buffer,
             .Uint32,
             index_offset,
             gpu.WHOLE_SIZE,
