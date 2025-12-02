@@ -49,7 +49,7 @@ init :: proc(self: ^Application) -> (ok: bool) {
     spawn_bunnies(self, BUNNIES_PER_TIME)
 
     self.camera_zoom = 20.0
-    rl.camera_set_zoom(self, self.camera_zoom)
+    rl.camera_set_zoom(&self.ctx.camera, self.camera_zoom)
 
     return true // init ok
 }
