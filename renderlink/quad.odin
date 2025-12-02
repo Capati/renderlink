@@ -2,8 +2,8 @@ package renderlink
 
 // Core
 import "core:math"
-import la "core:math/linalg"
 import sa "core:container/small_array"
+import la "core:math/linalg"
 
 Recti :: struct {
     offset: Vec2i,
@@ -165,7 +165,7 @@ create_line_strip :: proc(
 
     half_thickness := thickness / 4.0
 
-    for i in 0..<(len(points) - 1) {
+    for i in 0 ..< (len(points) - 1) {
         p0 := points[i]
         p1 := points[i + 1]
 
