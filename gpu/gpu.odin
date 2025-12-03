@@ -4727,6 +4727,12 @@ Proc_Render_Pass_Set_Viewport :: #type proc(
     loc := #caller_location,
 )
 
+Render_Pass_Set_Stencil_Reference :: #type proc(
+    render_pass: Render_Pass,
+    reference: u32,
+    loc := #caller_location,
+)
+
 Proc_Render_Pass_Draw :: #type proc(
     render_pass: Render_Pass,
     vertices: Range(u32),
@@ -4825,6 +4831,9 @@ render_pass_set_scissor_rect: Proc_Render_Pass_Set_Scissor_Rect
 
 // TODO
 render_pass_set_viewport: Proc_Render_Pass_Set_Viewport
+
+// TODO
+render_pass_set_stencil_reference: Render_Pass_Set_Stencil_Reference
 
 // Draws primitives from the active vertex buffer(s).
 //

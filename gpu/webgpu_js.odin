@@ -117,6 +117,7 @@ js_init :: proc(allocator := context.allocator) {
     render_pass_set_bind_group              = js_render_pass_set_bind_group
     render_pass_set_vertex_buffer           = js_render_pass_set_vertex_buffer
     render_pass_set_index_buffer            = js_render_pass_set_index_buffer
+    render_pass_set_stencil_reference       = js_render_pass_set_stencil_reference
     render_pass_draw                        = js_render_pass_draw
     render_pass_draw_indexed                = js_render_pass_draw_indexed
     render_pass_set_scissor_rect            = js_render_pass_set_scissor_rect
@@ -440,6 +441,7 @@ foreign webgpu {
         offset: u64,
         size: u64,
     ) ---
+    webgpuRenderPassEncoderSetStencilReference :: proc(render_pass: Render_Pass, reference: u32) ---
     webgpuRenderPassEncoderDraw :: proc(
         render_pass_encoder: Render_Pass,
         vertex_count: u32,
@@ -1375,6 +1377,14 @@ js_render_pass_set_index_buffer :: proc(
     actual_size := (size > 0 && size != WHOLE_SIZE) ? size : (buffer_size - offset)
 
     webgpuRenderPassEncoderSetIndexBuffer(render_pass, buffer, format, offset, actual_size)
+}
+
+js_render_pass_set_stencil_reference :: proc(
+    render_pass: Render_Pass,
+    reference: u32,
+    loc := #caller_location,
+) {
+    webgpuRenderPassEncoderSetStencilReference(render_pass, reference)
 }
 
 js_render_pass_draw :: proc(

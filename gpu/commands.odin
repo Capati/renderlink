@@ -67,6 +67,12 @@ Command_Render_Pass_Set_Viewport :: struct {
     max_depth: f32,
 }
 
+Command_Render_Pass_Set_Stencil_Reference :: struct {
+    render_pass: Render_Pass,
+    pipeline:    Render_Pipeline,
+    reference:   u32,
+}
+
 Command_Render_Pass_Draw :: struct {
     render_pass:    Render_Pass,
     vertex_count:   u32,
@@ -97,6 +103,7 @@ Command :: union #no_nil {
     Command_Render_Pass_Set_Index_Buffer,
     Command_Render_Pass_Set_Scissor_Rect,
     Command_Render_Pass_Set_Viewport,
+    Command_Render_Pass_Set_Stencil_Reference,
     Command_Render_Pass_Draw,
     Command_Render_Pass_Draw_Indexed,
     Command_Render_Pass_End,

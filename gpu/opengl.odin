@@ -211,6 +211,7 @@ gl_init :: proc(allocator := context.allocator) {
     render_pass_begin_occlusion_query       = gl_render_pass_begin_occlusion_query
     render_pass_set_scissor_rect            = gl_render_pass_set_scissor_rect
     render_pass_set_viewport                = gl_render_pass_set_viewport
+    render_pass_set_stencil_reference       = gl_render_pass_set_stencil_reference
     render_pass_draw                        = gl_render_pass_draw
     render_pass_draw_indexed                = gl_render_pass_draw_indexed
     render_pass_draw_indexed_indirect       = gl_render_pass_draw_indexed_indirect
@@ -3133,31 +3134,15 @@ gl_execute_render_pass_set_pipeline :: proc(
     if impl.stencil_test_enabled {
         gl.Enable(gl.STENCIL_TEST)
 
-        gl.StencilFuncSeparate(
-            gl.FRONT,
-            impl.stencil_front_compare_func,
-            0,
-            impl.stencil_read_mask,
-        )
-        gl.StencilOpSeparate(
-            gl.FRONT,
+        // Only set operations and write mask
+        gl.StencilOpSeparate(gl.FRONT,
             impl.stencil_front_fail_op,
             impl.stencil_front_depth_fail_op,
-            impl.stencil_front_pass_op,
-        )
-
-        gl.StencilFuncSeparate(
-            gl.BACK,
-            impl.stencil_back_compare_func,
-            0,
-            impl.stencil_read_mask,
-        )
-        gl.StencilOpSeparate(
-            gl.BACK,
+            impl.stencil_front_pass_op)
+        gl.StencilOpSeparate(gl.BACK,
             impl.stencil_back_fail_op,
             impl.stencil_back_depth_fail_op,
-            impl.stencil_back_pass_op,
-        )
+            impl.stencil_back_pass_op)
 
         gl.StencilMask(impl.stencil_write_mask)
     } else {
@@ -3391,6 +3376,30 @@ gl_execute_render_pass_set_viewport :: proc(
     gl.DepthRangef(cmd.min_depth, cmd.max_depth)
 }
 
+gl_execute_render_pass_set_stencil_reference :: proc(
+    cmd: ^Command_Render_Pass_Set_Stencil_Reference,
+    loc := #caller_location,
+) {
+    // impl := _gl_render_pass_get_impl(cmd.render_pass, loc)
+
+    if cmd.pipeline != nil {
+        pipeline_impl := _gl_render_pipeline_get_impl(cmd.pipeline, loc)
+
+        gl.StencilFuncSeparate(
+            gl.FRONT,
+            pipeline_impl.stencil_front_compare_func,
+            i32(cmd.reference),
+            pipeline_impl.stencil_read_mask,
+        )
+        gl.StencilFuncSeparate(
+            gl.BACK,
+            pipeline_impl.stencil_back_compare_func,
+            i32(cmd.reference),
+            pipeline_impl.stencil_read_mask,
+        )
+    }
+}
+
 gl_execute_render_pass_draw :: proc(cmd: ^Command_Render_Pass_Draw, loc := #caller_location) {
     impl := _gl_render_pass_get_impl(cmd.render_pass, loc)
     if impl.pipeline != nil {
@@ -3497,6 +3506,9 @@ gl_execute_command :: proc(
 
     case Command_Render_Pass_Set_Viewport:
         gl_execute_render_pass_set_viewport(&c)
+
+    case Command_Render_Pass_Set_Stencil_Reference:
+        gl_execute_render_pass_set_stencil_reference(&c)
 
     case Command_Render_Pass_Draw:
         gl_execute_render_pass_draw(&c)
@@ -4294,6 +4306,23 @@ gl_render_pass_set_viewport :: proc(
     cmd.height = height
     cmd.min_depth = min_depth
     cmd.max_depth = max_depth
+}
+
+gl_render_pass_set_stencil_reference :: proc(
+    render_pass: Render_Pass,
+    reference: u32,
+    loc := #caller_location,
+) {
+    impl := _gl_render_pass_get_impl(render_pass, loc)
+
+    encoder_impl := _gl_command_encoder_get_impl(impl.encoder, loc)
+    cmd := command_allocator_allocate(
+        &encoder_impl.cmd_allocator, Command_Render_Pass_Set_Stencil_Reference)
+    assert(cmd != nil)
+
+    cmd.render_pass = render_pass
+    cmd.pipeline = impl.pipeline
+    cmd.reference = reference
 }
 
 gl_render_pass_draw :: proc(
