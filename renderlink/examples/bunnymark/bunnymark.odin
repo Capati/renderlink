@@ -9,9 +9,9 @@ import la "core:math/linalg"
 // Local packages
 import rl "../../../renderlink"
 
-CLIENT_WIDTH       :: 640
-CLIENT_HEIGHT      :: 480
-EXAMPLE_TITLE      :: "Bunnymark"
+CLIENT_WIDTH  :: 640
+CLIENT_HEIGHT :: 480
+EXAMPLE_TITLE :: "Bunnymark"
 
 VIDEO_MODE_DEFAULT :: rl.Video_Mode {
     width  = CLIENT_WIDTH,
@@ -128,7 +128,7 @@ draw :: proc(self: ^Application, dt: f32) -> (ok: bool) {
     rl.clear_color(self, {77, 102, 128, 255})
 
     // Draw all bunnies
-    for bunny in self.bunnies {
+    for &bunny in self.bunnies {
         rl.draw_sprite(
             self,
             self.bunny_texture,
