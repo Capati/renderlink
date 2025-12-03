@@ -1,6 +1,7 @@
 package renderlink
 
 // Core
+import "base:runtime"
 import "core:mem"
 import "core:slice"
 // import "core:sync"
@@ -28,7 +29,7 @@ Batch_Data :: struct {
 
 render_queues_init :: proc(self: ^Render_Queues, allocator := context.allocator) {
     assert(self != nil, "Invalid render queues object")
-    self.data = make(Render_Queue_Map, allocator)
+    self.data = make(Render_Queue_Map, 64, allocator) // Pre-allocate some size
     self.allocator = allocator
     mem.dynamic_arena_init(&self.arena)
 }
@@ -66,7 +67,7 @@ push_mesh :: proc(ctx: ^Context, mesh: Mesh, blend_mode: Blend_Mode) #no_bounds_
     if !exists {
         arena_alloc := mem.dynamic_arena_allocator(&ctx.render_queues.arena)
         ctx.render_queues.data[key] = {
-            data      = make([dynamic]Mesh, arena_alloc),
+            data      = make([dynamic]Mesh, 0, 256, arena_alloc), // Pre-allocate capacity
             allocator = arena_alloc,
         }
         queue = &ctx.render_queues.data[key]
@@ -80,14 +81,18 @@ prepare_batches :: proc(
     ctx: ^Context,
     arena_alloc: mem.Allocator,
 ) -> []Batch_Data #no_bounds_check {
-    sorted_keys := make([dynamic]Mesh_Key, arena_alloc)
+    ta := context.temp_allocator
+    runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
+
+    sorted_keys := make([dynamic]Mesh_Key, 0, len(ctx.render_queues.data), ta)
 
     // Sort meshes within each queue and collect non-empty keys
     for key, &meshes in ctx.render_queues.data {
-        if len(meshes.data) == 0 do continue
+        mesh_count := len(meshes.data)
+        if mesh_count == 0 do continue
 
         // Uses the Y-sort setting for this Z-index
-        if y_sort_get(ctx, key.z_index) {
+        if mesh_count > 1 && y_sort_get(ctx, key.z_index) {
             slice.sort_by_key(meshes.data[:], proc(mesh: Mesh) -> f32 {
                 return -(mesh.origin.y + mesh.y_sort_offset)
             })
@@ -99,74 +104,95 @@ prepare_batches :: proc(
     // Sort batches by Z-index
     slice.sort_by_key(sorted_keys[:], proc(k: Mesh_Key) -> int { return k.z_index })
 
-    batches := make([dynamic]Batch_Data, arena_alloc)
+    batches := make([dynamic]Batch_Data, 0, len(sorted_keys), arena_alloc)
 
-    // Calculate total geometry requirements
+    // Pre-clear and reserve capacity
+    clear(&ctx.staging_vertices)
+    clear(&ctx.staging_indices)
+
+    // First pass: calculate total size
     total_vertices := 0
     total_indices := 0
 
     for &key in sorted_keys {
-        meshes := &(&ctx.render_queues.data[key]).data
+        meshes := ctx.render_queues.data[key].data[:]
+        for i := 0; i < len(meshes); i += 1 {
+            total_vertices += len(meshes[i].vertices)
+            total_indices += len(meshes[i].indices)
+        }
+    }
 
-        vertex_count: int
-        index_count: int
+    if cap(ctx.staging_vertices) < total_vertices {
+        reserve(&ctx.staging_vertices, total_vertices * 2) // Over-allocate for next frame
+    }
+    if cap(ctx.staging_indices) < total_indices {
+        reserve(&ctx.staging_indices, total_indices * 2)
+    }
 
-        for &mesh in meshes {
-            vertex_count += len(mesh.vertices)
-            index_count += len(mesh.indices)
+    // Resize buffers once to final size
+    non_zero_resize(&ctx.staging_vertices, total_vertices)
+    non_zero_resize(&ctx.staging_indices, total_indices)
+
+    vertex_write_pos := 0
+    index_write_pos := 0
+
+    for &key in sorted_keys {
+        meshes := ctx.render_queues.data[key].data[:]
+        mesh_count := len(meshes)
+
+        if mesh_count == 0 do continue
+
+        // Count vertices/indices for this batch
+        vertex_count := 0
+        index_count := 0
+        for i := 0; i < mesh_count; i += 1 {
+            vertex_count += len(meshes[i].vertices)
+            index_count += len(meshes[i].indices)
         }
 
         if vertex_count == 0 || index_count == 0 do continue
 
-        total_vertices += vertex_count
-        total_indices += index_count
-
+        // Record batch info
         append(
             &batches,
             Batch_Data{
                 key           = key,
                 vertex_count  = u32(vertex_count),
                 index_count   = u32(index_count),
-                vertex_offset = 0, // Will be updated below
-                index_offset  = 0,
+                vertex_offset = u32(vertex_write_pos),
+                index_offset  = u32(index_write_pos),
             },
         )
-    }
 
-    // Pre-clear staging buffers
-    clear(&ctx.staging_vertices)
-    clear(&ctx.staging_indices)
+        // Build geometry immediately
+        current_vertex_base: u32 = 0
 
-    // Reserve capacity if needed
-    if cap(ctx.staging_vertices) < total_vertices {
-        reserve(&ctx.staging_vertices, total_vertices)
-    }
-    if cap(ctx.staging_indices) < total_indices {
-        reserve(&ctx.staging_indices, total_indices)
-    }
+        for i := 0; i < mesh_count; i += 1 {
+            mesh := &meshes[i]
+            vertex_len := len(mesh.vertices)
+            index_len := len(mesh.indices)
 
-    // Build geometry (no more temp allocator)
-    for &batch in batches {
-        batch.vertex_offset = u32(len(ctx.staging_vertices))
-        batch.index_offset = u32(len(ctx.staging_indices))
-
-        meshes := ctx.render_queues.data[batch.key].data
-
-        // Append all vertices at once and append indices in batches
-        current_vertex_base: u32
-        for &mesh in meshes {
-            append(&ctx.staging_vertices, ..mesh.vertices[:])
-
-            if len(mesh.indices) == 0 do continue
-
-            index_start := len(ctx.staging_indices)
-            resize(&ctx.staging_indices, len(ctx.staging_indices) + len(mesh.indices))
-
-            for i in 0..< len(mesh.indices) {
-                ctx.staging_indices[index_start + i] = mesh.indices[i] + current_vertex_base
+            // Bulk copy vertices
+            if vertex_len > 0 {
+                mem.copy_non_overlapping(
+                    raw_data(ctx.staging_vertices[vertex_write_pos:]),
+                    raw_data(mesh.vertices[:]),
+                    vertex_len * size_of(mesh.vertices[0]),
+                )
+                vertex_write_pos += vertex_len
             }
 
-            current_vertex_base += u32(len(mesh.vertices))
+            // Bulk copy and adjust indices
+            if index_len > 0 {
+                indices_dest := ctx.staging_indices[index_write_pos:]
+                indices_src := mesh.indices[:]
+                for j := 0; j < index_len; j += 1 {
+                    indices_dest[j] = indices_src[j] + current_vertex_base
+                }
+                index_write_pos += index_len
+            }
+
+            current_vertex_base += u32(vertex_len)
         }
     }
 
@@ -188,7 +214,7 @@ Y_Sort_State :: struct {
 y_sort_init :: proc(self: ^Y_Sort_State, allocator := context.allocator) {
     assert(self != nil, "Invalid y sort flags object")
     // sync.guard(&self.mutex)
-    self.data = make(map[int]bool, allocator)
+    self.data = make(map[int]bool, 16, allocator) // Pre-allocate
     self.allocator = allocator
 }
 
