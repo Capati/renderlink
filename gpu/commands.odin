@@ -17,6 +17,7 @@ Command_Begin_Compute_Pass :: struct {
 }
 
 Command_Begin_Render_Pass :: struct {
+    render_pass:              Render_Pass,
     color_attachments:        sa.Small_Array(MAX_COLOR_ATTACHMENTS, Render_Pass_Color_Attachment),
     depth_stencil_attachment: Maybe(Render_Pass_Depth_Stencil_Attachment),
     width:                    u32,
@@ -37,6 +38,7 @@ Command_Render_Pass_Set_Bind_Group :: struct {
 
 Command_Render_Pass_Set_Vertex_Buffer :: struct {
     render_pass: Render_Pass,
+    pipeline:    Render_Pipeline,
     slot:        u32,
     buffer:      Buffer,
     offset:      u64,
@@ -75,6 +77,7 @@ Command_Render_Pass_Set_Stencil_Reference :: struct {
 
 Command_Render_Pass_Draw :: struct {
     render_pass:    Render_Pass,
+    pipeline:       Render_Pipeline,
     vertex_count:   u32,
     instance_count: u32,
     first_vertex:   u32,

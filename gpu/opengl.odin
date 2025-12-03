@@ -2992,56 +2992,8 @@ gl_execute_begin_render_pass :: proc(cmd: ^Command_Begin_Render_Pass, loc := #ca
     gl.NamedFramebufferTexture(fbo, gl.STENCIL_ATTACHMENT, 0, 0)
     gl.NamedFramebufferTexture(fbo, gl.DEPTH_STENCIL_ATTACHMENT, 0, 0)
 
-    // Attach depth texture if present
-    if depth_stencil, ok := cmd.depth_stencil_attachment.?; ok {
-        assert(depth_stencil.view != nil, "Depth stencil view is nil", loc)
-
-        depth_texture_view_impl := _gl_texture_view_get_impl(depth_stencil.view, loc)
-        depth_texture_impl := _gl_texture_get_impl(depth_texture_view_impl.texture, loc)
-
-        // Verify dimensions match the render pass
-        if depth_texture_impl.size.width != cmd.width ||
-           depth_texture_impl.size.height != cmd.height {
-            log.errorf("Dimension mismatch: Depth=%dx%d, RenderPass=%dx%d",
-                depth_texture_impl.size.width, depth_texture_impl.size.height,
-                cmd.width, cmd.height)
-            panic("Depth texture dimensions don't match render pass", loc)
-        }
-
-        // Determine attachment point based on format
-        attachment_point: u32
-        format := depth_texture_impl.format
-
-        // First check if it's a combined depth-stencil format
-        if texture_format_is_combined_depth_stencil_format(format) {
-            attachment_point = gl.DEPTH_STENCIL_ATTACHMENT
-        }  else if texture_format_has_depth_aspect(format) {
-            attachment_point = gl.DEPTH_ATTACHMENT
-        } else if texture_format_has_stencil_aspect(format) {
-            attachment_point = gl.STENCIL_ATTACHMENT
-        } else {
-            panic("Invalid depth/stencil format", loc)
-        }
-
-        view_impl := _gl_texture_view_get_impl(depth_stencil.view, loc)
-
-        // Attach depth texture to framebuffer
-        gl.NamedFramebufferTexture(
-            fbo,
-            attachment_point,
-            depth_texture_impl.handle,
-            i32(view_impl.base_mip_level),
-        )
-
-        // Check framebuffer completeness after attaching depth/stencil
-        status := gl.CheckNamedFramebufferStatus(fbo, gl.FRAMEBUFFER)
-        assert(status == gl.FRAMEBUFFER_COMPLETE,
-            "Framebuffer not complete after depth attachment", loc)
-    }
-
-    // Bind the framebuffer
+    // Bind the framebuffer FIRST
     gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
-    // gl.Enable(gl.FRAMEBUFFER_SRGB)
 
     // Default state
     gl.Viewport(0, 0, i32(cmd.width), i32(cmd.height))
@@ -3077,7 +3029,51 @@ gl_execute_begin_render_pass :: proc(cmd: ^Command_Begin_Render_Pass, loc := #ca
 
     // Process depth/stencil attachment
     if depth_stencil, ok := cmd.depth_stencil_attachment.?; ok {
-        // Handle depth operations
+        assert(depth_stencil.view != nil, "Depth stencil view is nil", loc)
+
+        depth_texture_view_impl := _gl_texture_view_get_impl(depth_stencil.view, loc)
+        depth_texture_impl := _gl_texture_get_impl(depth_texture_view_impl.texture, loc)
+
+        // Verify dimensions match the render pass
+        if depth_texture_impl.size.width != cmd.width ||
+           depth_texture_impl.size.height != cmd.height {
+            log.errorf("Dimension mismatch: Depth=%dx%d, RenderPass=%dx%d",
+                depth_texture_impl.size.width, depth_texture_impl.size.height,
+                cmd.width, cmd.height)
+            panic("Depth texture dimensions don't match render pass", loc)
+        }
+
+        // Determine attachment point based on format
+        attachment_point: u32
+        format := depth_texture_impl.format
+
+        // First check if it's a combined depth-stencil format
+        if texture_format_is_combined_depth_stencil_format(format) {
+            attachment_point = gl.DEPTH_STENCIL_ATTACHMENT
+        } else if texture_format_has_depth_aspect(format) {
+            attachment_point = gl.DEPTH_ATTACHMENT
+        } else if texture_format_has_stencil_aspect(format) {
+            attachment_point = gl.STENCIL_ATTACHMENT
+        } else {
+            panic("Invalid depth/stencil format", loc)
+        }
+
+        view_impl := _gl_texture_view_get_impl(depth_stencil.view, loc)
+
+        // Attach depth texture to framebuffer
+        gl.NamedFramebufferTexture(
+            fbo,
+            attachment_point,
+            depth_texture_impl.handle,
+            i32(view_impl.base_mip_level),
+        )
+
+        // Check framebuffer completeness after attaching depth/stencil
+        status := gl.CheckNamedFramebufferStatus(fbo, gl.FRAMEBUFFER)
+        assert(status == gl.FRAMEBUFFER_COMPLETE,
+            "Framebuffer not complete after depth attachment", loc)
+
+        // NOW handle depth operations (with texture attached!)
         switch depth_stencil.depth_ops.load {
         case .Clear:
             depth_clear := f32(depth_stencil.depth_ops.clear_value)
@@ -3088,7 +3084,7 @@ gl_execute_begin_render_pass :: proc(cmd: ^Command_Begin_Render_Pass, loc := #ca
             // Don't care
         }
 
-        // Handle stencil operations
+        // Handle stencil operations (with texture attached!)
         switch depth_stencil.stencil_ops.load {
         case .Clear:
             stencil_clear := i32(depth_stencil.stencil_ops.clear_value)
@@ -3296,8 +3292,8 @@ gl_execute_render_pass_set_vertex_buffer :: proc(
     cmd: ^Command_Render_Pass_Set_Vertex_Buffer,
     loc := #caller_location,
 ) {
-    impl := _gl_render_pass_get_impl(cmd.render_pass, loc)
-    pipeline_impl := _gl_render_pipeline_get_impl(impl.pipeline, loc)
+    // impl := _gl_render_pass_get_impl(cmd.render_pass, loc)
+    pipeline_impl := _gl_render_pipeline_get_impl(cmd.pipeline, loc)
     buffer_impl := _gl_buffer_get_impl(cmd.buffer, loc)
 
     // Validate slot
@@ -3398,9 +3394,9 @@ gl_execute_render_pass_set_stencil_reference :: proc(
 }
 
 gl_execute_render_pass_draw :: proc(cmd: ^Command_Render_Pass_Draw, loc := #caller_location) {
-    impl := _gl_render_pass_get_impl(cmd.render_pass, loc)
-    if impl.pipeline != nil {
-        pipeline_impl := _gl_render_pipeline_get_impl(impl.pipeline, loc)
+    // impl := _gl_render_pass_get_impl(cmd.render_pass, loc)
+    if cmd.pipeline != nil {
+        pipeline_impl := _gl_render_pipeline_get_impl(cmd.pipeline, loc)
         gl.DrawArrays(
             pipeline_impl.mode,
             i32(cmd.first_vertex),
@@ -4336,6 +4332,7 @@ gl_render_pass_draw :: proc(
     assert(cmd != nil, loc = loc)
 
     cmd.render_pass = render_pass
+    cmd.pipeline = impl.pipeline
     cmd.vertex_count = vertices.end - vertices.start
     cmd.instance_count = instances.end - instances.start
     cmd.first_vertex = vertices.start
@@ -4473,6 +4470,7 @@ gl_render_pass_set_vertex_buffer :: proc(
     assert(cmd != nil)
 
     cmd.render_pass = render_pass
+    cmd.pipeline = impl.pipeline
     cmd.slot = slot
     cmd.buffer = buffer
     cmd.offset = offset
@@ -4789,7 +4787,7 @@ GL_Render_Pipeline_Impl :: struct {
     label:                       String_Buffer_Small,
     ref:                         Ref_Count,
     device:                      Device,
-    allocator:       runtime.Allocator,
+    allocator:                   runtime.Allocator,
 
     // Backend
     program:                     u32,
