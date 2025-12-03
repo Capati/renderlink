@@ -3323,12 +3323,9 @@ gl_execute_render_pass_set_vertex_buffer :: proc(
         stride,
     )
 
-    // Enable attributes only if not already enabled for this slot
-    if cmd.slot not_in impl.enabled_vertex_buffers {
-        for &attrib in buffer_attributes {
-            gl.EnableVertexArrayAttrib(pipeline_impl.vao, attrib.index)
-        }
-        impl.enabled_vertex_buffers += {cmd.slot}
+    // Enable attributes for this slot
+    for &attrib in buffer_attributes {
+        gl.EnableVertexArrayAttrib(pipeline_impl.vao, attrib.index)
     }
 }
 
