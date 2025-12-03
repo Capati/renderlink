@@ -625,6 +625,12 @@ Primitive_State :: struct {
     conservative:       bool,
 }
 
+PRIMITIVE_STATE_DEFAULT :: Primitive_State {
+    topology  = .Triangle_List,
+    front_face = .Ccw,
+    cull_mode  = .None,
+}
+
 // Describes the multi-sampling state of a render pipeline.
 Multisample_State :: struct {
     // The number of samples calculated per pixel (for MSAA). For
@@ -661,6 +667,9 @@ Color_Write :: enum u32 {
     // Enable alpha channel writes
     Alpha,
 }
+
+// No color writes.
+COLOR_WRITES_NONE :: Color_Writes{}
 
 // Enable red, green, and blue channel writes
 COLOR_WRITES_COLOR :: Color_Writes{.Red, .Green, .Blue}
