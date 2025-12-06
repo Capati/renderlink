@@ -163,7 +163,7 @@ on_adapter :: proc "c" (
     // Request device with specified requirements
     device_descriptor := gpu.Device_Descriptor {
         label = "Device",
-        required_features = {.Clip_Distances},
+        required_features = app.settings.required_features,
         required_limits   = app.settings.required_limits,
         uncaptured_error_callback_info = {
             callback = uncaptured_error_callback,
