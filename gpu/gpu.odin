@@ -3818,10 +3818,7 @@ Proc_Instance_Create_Surface :: #type proc(
     instance: Instance,
     descriptor: Surface_Descriptor,
     loc := #caller_location,
-) -> (
-    Surface,
-    bool,
-)
+) -> Surface
 
 Proc_Instance_Request_Adapter :: #type proc(
     instance: Instance,

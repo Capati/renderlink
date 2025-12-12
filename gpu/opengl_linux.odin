@@ -136,7 +136,6 @@ gl_linux_instance_create_surface :: proc(
     loc := #caller_location,
 ) -> (
     ret: Surface,
-    ok: bool,
 ) {
     impl := gl_instance_get_impl(instance, loc)
 
@@ -271,7 +270,7 @@ gl_linux_instance_create_surface :: proc(
     surface.egl_config = egl_config
     surface.egl_surface = egl_surface
 
-    return Surface(surface), true
+    return Surface(surface)
 }
 
 gl_linux_instance_request_adapter :: proc(

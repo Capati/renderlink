@@ -119,6 +119,7 @@ init :: proc(
 
     // Create surface from window
     app.surface = window_get_gpu_surface(app.window, app.instance)
+    assert(app.surface != nil, "Failed to create GPU surface")
 
     // Request adapter
     adapter_options := gpu.Request_Adapter_Options {

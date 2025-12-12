@@ -11,10 +11,7 @@ _window_get_gpu_surface :: proc(
     window: Window,
     instance: gpu.Instance,
     loc := #caller_location,
-) -> (
-    surface: gpu.Surface,
-    ok: bool,
-) #optional_ok {
+) -> gpu.Surface {
     impl := _window_get_impl(window, loc)
 
     descriptor: gpu.Surface_Descriptor

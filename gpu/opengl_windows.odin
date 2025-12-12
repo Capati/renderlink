@@ -284,10 +284,7 @@ gl_win32_instance_create_surface :: proc(
     instance: Instance,
     descriptor: Surface_Descriptor,
     loc := #caller_location,
-) -> (
-    ret: Surface,
-    ok: bool,
-) {
+) -> Surface {
     impl := gl_instance_get_impl(instance, loc)
 
     hinstance: win32.HINSTANCE
@@ -297,23 +294,26 @@ gl_win32_instance_create_surface :: proc(
     case Surface_Source_Windows_HWND:
         if t.hinstance == nil || t.hwnd == nil {
             log.error("Invalid HWND surface descriptor")
-            return
+            return nil
         }
         hinstance = win32.HINSTANCE(t.hinstance)
         hwnd = win32.HWND(t.hwnd)
     case:
         log.error("Unsupported surface descriptor type")
-        return
+        return nil
     }
 
     hdc := win32.GetDC(hwnd)
     if hdc == nil {
         log.errorf("GetDC failed: error code %d", win32.GetLastError())
-        return
+        return nil
     }
-    defer if !ok do win32.ReleaseDC(hwnd, hdc)
 
-    pixel_format := gl_win32_set_pixel_format(impl.wgl, hdc) or_return
+    pixel_format, pixel_format_ok := gl_win32_set_pixel_format(impl.wgl, hdc)
+    if !pixel_format_ok {
+        win32.ReleaseDC(hwnd, hdc)
+        return nil
+    }
 
     surface := gl_surface_new_impl(instance, impl.allocator, loc)
     surface.hinstance = hinstance
@@ -321,7 +321,7 @@ gl_win32_instance_create_surface :: proc(
     surface.hdc = hdc
     surface.pixel_format = pixel_format
 
-    return Surface(surface), true
+    return Surface(surface)
 }
 
 gl_win32_instance_request_adapter :: proc(
