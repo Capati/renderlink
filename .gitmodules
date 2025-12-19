@@ -1,0 +1,6 @@
+[submodule "libs/odin-gpu"]
+	path = libs/odin-gpu
+	url = https://github.com/Capati/odin-gpu
+[submodule "libs/gpu"]
+	path = libs/gpu
+	url = https://github.com/Capati/odin-gpu
