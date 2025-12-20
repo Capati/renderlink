@@ -6,6 +6,8 @@ import "base:runtime"
 import "core:mem"
 import "core:log"
 
+LOAD_FILE_BUFFER_SIZE :: #config(RL_LOAD_FILE_BUFFER_SIZE, 1 * mem.Megabyte)
+
 foreign import "odin_env"
 
 @(default_calling_convention = "contextless")
@@ -16,7 +18,7 @@ foreign odin_env {
 load_file :: proc(filename: string, allocator := context.allocator) -> (data: []u8, ok: bool) {
     // Create temporary buffer
     runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD(ignore = allocator == context.temp_allocator)
-    temp_buffer := make([]u8, 1 * mem.Megabyte, context.temp_allocator)
+    temp_buffer := make([]u8, LOAD_FILE_BUFFER_SIZE, context.temp_allocator)
 
     // Load file into buffer
     length := load_file_sync(filename, raw_data(temp_buffer), len(temp_buffer))
