@@ -23,6 +23,7 @@ node_modules
 /build/shaders/*/*.frag
 /build/shaders/*/*.vert
 /build/shaders/*/*.dxil
+/build/shaders/*/*.dxbc
 /build/*.exe
 /build/*.js
 /build/.shader_hash
