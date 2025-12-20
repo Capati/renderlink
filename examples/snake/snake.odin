@@ -59,7 +59,7 @@ init :: proc(self: ^Application) -> (ok: bool) {
     // Initial state
     restart(self)
 
-    texture_info := rl.DEFAULT_TEXTURE_INFO // defaults to nearest filer
+    texture_info := rl.DEFAULT_TEXTURE_INFO // defaults to nearest filter
 
     // Load textures
     self.food_texture = rl.load_texture(self, "assets/snake/food.png") or_return
