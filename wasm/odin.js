@@ -182,17 +182,17 @@ function odinSetupDefaultImports(wasmMemoryInterface, consoleElement, memory) {
     currentLine[false] = "";
     currentLine[true] = "";
     let prevIsError = false;
-    
+
     let event_temp = {};
 
     const onEventReceived = (event_data, data, callback) => {
         event_temp.data = event_data;
-        
+
         const exports = wasmMemoryInterface.exports;
         const odin_ctx = exports.default_context_ptr();
-        
+
         exports.odin_dom_do_event_callback(data, callback, odin_ctx);
-        
+
         event_temp.data = null;
     };
 
