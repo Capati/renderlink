@@ -9,7 +9,7 @@ import "core:time"
 import sa "core:container/small_array"
 
 // Local packages
-import rl "../../../renderlink"
+import rl "../../renderlink"
 
 EXAMPLE_TITLE      :: "Snake"
 
@@ -59,6 +59,8 @@ init :: proc(self: ^Application) -> (ok: bool) {
     // Initial state
     restart(self)
 
+    texture_info := rl.DEFAULT_TEXTURE_INFO // defaults to nearest filer
+
     // Load textures
     self.food_texture = rl.load_texture(self, "assets/snake/food.png") or_return
     defer if !ok { rl.texture_destroy(self, self.food_texture) }
@@ -66,8 +68,9 @@ init :: proc(self: ^Application) -> (ok: bool) {
     self.body_texture = rl.load_texture(self, "assets/snake/body.png") or_return
     defer if !ok { rl.texture_destroy(self, self.body_texture) }
 
+    texture_info.address_mode = .Repeat
     self.background_texture = rl.load_texture(self,
-        "assets/snake/background.png", { address_mode = .Repeat }) or_return
+        "assets/snake/background.png", texture_info) or_return
     defer if !ok { rl.texture_destroy(self, self.background_texture) }
 
     // Load sounds

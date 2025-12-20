@@ -22,28 +22,28 @@ struct pixelInput_0
 #line 2306
 struct KernelContext_0
 {
-    texture2d<float, access::sample> s_diffuse_texture_0;
-    sampler s_diffuse_sampler_0;
+    texture2d<float, access::sample> s_diffuse_0;
+    sampler s_sampler_0;
 };
 
 
-#line 43 "renderlink/assets/shaders/sprite.slang"
-[[fragment]] pixelOutput_0 fs_main(pixelInput_0 _S1 [[stage_in]], texture2d<float, access::sample> s_diffuse_texture_1 [[texture(0)]], sampler s_diffuse_sampler_1 [[sampler(0)]])
+#line 56 "renderlink/assets/shaders/sprite.slang"
+[[fragment]] pixelOutput_0 fs_main(pixelInput_0 _S1 [[stage_in]], float4 clip_position_0 [[position]], texture2d<float, access::sample> s_diffuse_1 [[texture(1)]], sampler s_sampler_1 [[sampler(2)]])
 {
 
-#line 43
+#line 56
     KernelContext_0 kernelContext_0;
 
-#line 43
-    (&kernelContext_0)->s_diffuse_texture_0 = s_diffuse_texture_1;
+#line 56
+    (&kernelContext_0)->s_diffuse_0 = s_diffuse_1;
 
-#line 43
-    (&kernelContext_0)->s_diffuse_sampler_0 = s_diffuse_sampler_1;
-    ;
+#line 56
+    (&kernelContext_0)->s_sampler_0 = s_sampler_1;
 
-#line 44
-    pixelOutput_0 _S2 = { (((&kernelContext_0)->s_diffuse_texture_0).sample(((&kernelContext_0)->s_diffuse_sampler_0), (_S1.tex_coord_0))) * _S1.color_0 };
+#line 56
+    pixelOutput_0 _S2 = { (((&kernelContext_0)->s_diffuse_0).sample((s_sampler_1), (_S1.tex_coord_0))) * _S1.color_0 };
 
+#line 66
     return _S2;
 }
 

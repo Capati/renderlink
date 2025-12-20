@@ -1,7 +1,7 @@
 package renderlink
 
 // Local libs
-import "../gpu"
+import "../libs/gpu"
 
 Pipeline_Type :: enum u8 {
     Builtin,

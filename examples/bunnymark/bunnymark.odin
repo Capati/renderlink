@@ -7,7 +7,7 @@ import "core:math/rand"
 import la "core:math/linalg"
 
 // Local packages
-import rl "../../../renderlink"
+import rl "../../renderlink"
 
 CLIENT_WIDTH  :: 640
 CLIENT_HEIGHT :: 480

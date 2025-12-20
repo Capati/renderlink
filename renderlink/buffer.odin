@@ -1,15 +1,14 @@
 package renderlink
 
 // Local libs
-import "../gpu"
-import "../shared"
+import "../libs/gpu"
 
 Sized_Buffer :: struct {
     device: gpu.Device,
     buffer: gpu.Buffer,
     size:   gpu.Buffer_Address,
     usage:  gpu.Buffer_Usages,
-    label:  shared.String_Buffer_Small,
+    label:  String_Buffer_Small,
 }
 
 create_buffer :: proc(
@@ -35,7 +34,7 @@ create_buffer :: proc(
     buffer.usage = usage
 
     if len(label) > 0 {
-        shared.string_buffer_init(&buffer.label, label)
+        string_buffer_init(&buffer.label, label)
     }
 
     return

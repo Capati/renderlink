@@ -5,7 +5,7 @@ import "base:runtime"
 
 // Local libs
 import app "../application"
-import "../gpu"
+import "../libs/gpu"
 
 Texture :: distinct Handle
 

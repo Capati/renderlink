@@ -9,7 +9,7 @@ import intr "base:intrinsics"
 
 // Local libs
 import app "../application"
-import "../gpu"
+import "../libs/gpu"
 
 BUFFER_SIZE_DEFAULT :: 1024 * 1024
 

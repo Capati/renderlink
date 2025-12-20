@@ -1,6 +1,6 @@
-@binding(1) @group(0) var s_diffuse_texture_0 : texture_2d<f32>;
+@binding(1) @group(0) var s_diffuse_0 : texture_2d<f32>;
 
-@binding(2) @group(0) var s_diffuse_sampler_0 : sampler;
+@binding(2) @group(0) var s_sampler_0 : sampler;
 
 struct pixelOutput_0
 {
@@ -15,10 +15,9 @@ struct pixelInput_0
 };
 
 @fragment
-fn fs_main( _S1 : pixelInput_0) -> pixelOutput_0
+fn fs_main( _S1 : pixelInput_0, @builtin(position) clip_position_0 : vec4<f32>) -> pixelOutput_0
 {
-    ;
-    var _S2 : pixelOutput_0 = pixelOutput_0( (textureSample((s_diffuse_texture_0), (s_diffuse_sampler_0), (_S1.tex_coord_0))) * _S1.color_0 );
+    var _S2 : pixelOutput_0 = pixelOutput_0( (textureSample((s_diffuse_0), (s_sampler_0), (_S1.tex_coord_0))) * _S1.color_0 );
     return _S2;
 }
 

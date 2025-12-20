@@ -1,7 +1,7 @@
 package renderlink
 
 // Local libs
-import "../gpu"
+import "../libs/gpu"
 
 Shader :: distinct Handle
 
@@ -31,10 +31,18 @@ create_sprite_shader :: proc(ctx: ^Context, loc := #caller_location) -> (shader:
 
         case .Gl:
             when ODIN_OS == .Windows || ODIN_OS == .Linux {
-                vs_source = #load("./assets/shaders/GLSL/sprite.vert")
-                fs_source = #load("./assets/shaders/GLSL/sprite.frag")
+                vs_source = #load("./assets/shaders/GLSL/sprite.vert.glsl")
+                fs_source = #load("./assets/shaders/GLSL/sprite.frag.glsl")
             } else {
                 panic("OpenGL backend not supported on this platform")
+            }
+
+        case .Dx11:
+            when ODIN_OS == .Windows {
+                vs_source = #load("./assets/shaders/DXBC/sprite.vert.dxbc")
+                fs_source = #load("./assets/shaders/DXBC/sprite.frag.dxbc")
+            } else {
+                panic("Dx11 backend not supported on this platform")
             }
 
         case .Metal:
