@@ -4,9 +4,6 @@ package application
 import "base:runtime"
 import "core:log"
 
-// Local libs
-import "../shared"
-
 // Opaque handle representing a `Window`.
 Window :: distinct uintptr
 
@@ -66,7 +63,7 @@ Window_Base :: struct {
     app:              ^Application,
     settings:         Window_Settings,
     mode:             Video_Mode,
-    title_buf:        shared.String_Buffer_Small,
+    title_buf:        String_Buffer_Small,
     size:             Vec2u,
     events:           Events,
     resize_callbacks: [dynamic]Window_Resize_Info,

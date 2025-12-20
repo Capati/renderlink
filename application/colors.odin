@@ -1,7 +1,7 @@
 package application
 
 // Local libs
-import "../gpu"
+import "../libs/gpu"
 
 Color :: gpu.Color
 

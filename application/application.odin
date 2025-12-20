@@ -6,7 +6,7 @@ import "core:log"
 import intr "base:intrinsics"
 
 // Libs
-import "../gpu"
+import "../libs/gpu"
 
 _ :: log
 _ :: gpu

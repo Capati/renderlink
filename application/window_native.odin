@@ -8,9 +8,6 @@ import "core:log"
 // Vendor
 import "vendor:glfw"
 
-// Libs
-import "../shared"
-
 @(private, init)
 _glfw_init :: proc "contextless" () {
     when ODIN_DEBUG {
@@ -106,11 +103,11 @@ _window_create :: proc(
     }
 
     // Create the GLFW window
-    shared.string_buffer_init(&impl.title_buf, title)
+    string_buffer_init(&impl.title_buf, title)
     impl.handle = glfw.CreateWindow(
         i32(mode.width),
         i32(mode.height),
-        shared.string_buffer_get_cstring(&impl.title_buf),
+        string_buffer_get_cstring(&impl.title_buf),
         target_monitor,
         nil,
     )
@@ -159,8 +156,8 @@ _window_get_title :: proc(window: Window) -> string {
 
 _window_set_title_string :: proc(window: Window, title: string) {
     impl := _window_get_impl(window)
-    shared.string_buffer_init(&impl.title_buf, title)
-    _window_set_title_cstring(window, shared.string_buffer_get_cstring(&impl.title_buf))
+    string_buffer_init(&impl.title_buf, title)
+    _window_set_title_cstring(window, string_buffer_get_cstring(&impl.title_buf))
 }
 
 _window_set_title_cstring :: proc(window: Window, title: cstring) {

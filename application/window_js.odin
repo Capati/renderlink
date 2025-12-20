@@ -6,7 +6,7 @@ import "base:runtime"
 import "core:sys/wasm/js"
 
 // Local packages
-import "../gpu"
+import "../libs/gpu"
 
 CANVAS_ID_DEFAUULT :: "#canvas"
 
@@ -108,10 +108,7 @@ _window_switch_to_fullscreen :: proc (window: Window, mode: Video_Mode) {
 _window_get_gpu_surface :: proc(
     window: Window,
     instance: gpu.Instance,
-) -> (
-    gpu.Surface,
-    bool,
-) #optional_ok {
+) -> gpu.Surface {
     impl := _window_get_impl(window)
     return gpu.instance_create_surface(
         instance,

@@ -5,7 +5,7 @@ import "base:runtime"
 import "core:log"
 
 // Libs
-import "../gpu"
+import "../libs/gpu"
 
 GPU_Settings :: struct {
     power_preference:         gpu.Power_Preference,
@@ -218,6 +218,7 @@ get_backend_string :: proc(self: ^Application) -> string {
     case .Vulkan: return "Vulkan"
     case .Metal:  return "Metal"
     case .Dx12:   return "Dx12"
+    case .Dx11:   return "Dx11"
     case .Gl:     return "OpenGL"
     case .WebGPU: return "WebGPU"
     }

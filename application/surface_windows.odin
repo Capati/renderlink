@@ -8,7 +8,7 @@ import win32 "core:sys/windows"
 import "vendor:glfw"
 
 // Local packages
-import "../gpu"
+import "../libs/gpu"
 
 _window_get_gpu_surface :: proc(
     window: Window,
