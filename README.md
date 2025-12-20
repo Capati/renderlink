@@ -24,7 +24,7 @@ Tested in Odin version: `dev-2025-12:ac61f083f`.
 
 ## Packages
 
-This library is divided in different packages:
+This library is divided in different folders and packages:
 
 ```text
 ├───application   # framework to handle window and gpu context
@@ -46,9 +46,3 @@ TODO.
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
 [Odin Progrramming Language]: https://odin-lang.org/
-
----
-
-<p align="center">
-  Made with ❤️ by developers who just want graphics to work
-</p>
